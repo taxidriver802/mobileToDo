@@ -1,33 +1,29 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import TodoMaker from '../components/TodoMaker';
 
-export default function Index() {
-  const { colors } = useTheme();
-  const [isTodoOpen, setIsTodoOpen] = React.useState(false);
-  const handleTodoClick = () => {
-    // Handle the todo click action here
+export default function Settings() {
+  const { toggleDarkMode, colors } = useTheme();
 
-    setIsTodoOpen(true);
-  };
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.content, { color: colors.text }]}>
-        This is the Todo Screen
+      <Text style={[styles.title, { color: colors.text }]}>
+        Settings Screen
       </Text>
-      <Text style={[styles.content, { color: colors.text }]}>
-        Your added content will appear here.
+      <Text style={[styles.description, { color: colors.text }]}>
+        This is the settings screen where you can adjust your preferences.
+      </Text>
+      <Text style={[styles.description, { color: colors.text }]}>
+        You can add more settings options here as needed.
       </Text>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.primary }]}
-        onPress={handleTodoClick}
+        onPress={toggleDarkMode}
       >
         <Text style={[styles.buttonText, { color: colors.surface }]}>
-          + Add Todo
+          Toggle Dark Mode
         </Text>
       </TouchableOpacity>
-      {isTodoOpen && <TodoMaker />}
     </View>
   );
 }
@@ -37,14 +33,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
     padding: 20,
   },
-  content: {
-    fontSize: 20,
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 20,
     textAlign: 'center',
+  },
+  description: {
+    fontSize: 16,
     marginBottom: 10,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   button: {
     paddingHorizontal: 20,
