@@ -106,8 +106,6 @@ const TodoMaker = ({
   }, [todoToEdit]);
 
   const handleSubmit = () => {
-    console.log(title, !title.trim(), description, !description.trim());
-
     if (!title.trim() && !description.trim()) {
       Alert.alert(
         'Empty Todo',
