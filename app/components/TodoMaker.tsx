@@ -1,6 +1,6 @@
 import useTheme from '@/hooks/useTheme';
 import { nanoid } from 'nanoid/non-secure';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Keyboard,
   StyleSheet,
@@ -16,25 +16,39 @@ import type { Todo } from '../(tabs)/index';
 interface TodoMakerProps {
   setIsTodoOpen: (isOpen: boolean) => void;
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
+  todoToEdit?: Todo;
 }
 
-const TodoMaker = ({ setIsTodoOpen, setTodos }: TodoMakerProps) => {
+const TodoMaker = ({ setIsTodoOpen, setTodos, todoToEdit }: TodoMakerProps) => {
   const { colors } = useTheme();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = React.useState(todoToEdit?.title || '');
+  const [description, setDescription] = React.useState(
+    todoToEdit?.description || ''
+  );
 
   const handleSubmit = () => {
-    if (title.trim()) {
+    if (!title.trim()) return;
+    if (todoToEdit) {
+      console.log('attempt');
+
+      setTodos(prev =>
+        prev.map(t =>
+          t.id === todoToEdit.id
+            ? { ...t, title: title.trim(), description: description.trim() }
+            : t
+        )
+      );
+    } else {
       const newTodo: Todo = {
         title: title.trim(),
         description: description.trim(),
         id: nanoid(),
       };
       setTodos(prevTodos => [...prevTodos, newTodo]);
-      setTitle('');
-      setDescription('');
-      setIsTodoOpen(false);
     }
+    setTitle('');
+    setDescription('');
+    setIsTodoOpen(false);
   };
 
   return (

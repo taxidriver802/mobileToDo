@@ -202,7 +202,9 @@ export default function Index() {
       )}
       {isEditOpen && (
         <TodoEditor
+          setIsTodoOpen={setIsTodoOpen}
           setIsEditOpen={setIsEditOpen}
+          isTodoOpen={isTodoOpen}
           setTodos={setTodos}
           todos={todos}
         />

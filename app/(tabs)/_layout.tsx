@@ -39,7 +39,7 @@ const TabsLayout = () => {
               <Ionicons name="flash-outline" size={size} color={color} />
             ),
           }}
-          initialParams={{ todos, setTodos }}
+          initialParams={{ todos }}
         />
 
         <Tabs.Screen
@@ -50,7 +50,7 @@ const TabsLayout = () => {
               <Ionicons name="home" size={size} color={color} />
             ),
           }}
-          initialParams={{ todos, setTodos }}
+          initialParams={{ todos }}
         />
         <Tabs.Screen
           name="settings"

@@ -33,3 +33,5 @@ export const useTodos = () => {
   }
   return context;
 };
+
+export default TodosProvider;

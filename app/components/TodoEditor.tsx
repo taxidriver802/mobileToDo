@@ -1,20 +1,48 @@
 import useTheme from '@/hooks/useTheme';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
 
+import TodoMaker from './TodoMaker';
+
 interface TodoEditorProps {
   setIsEditOpen: (isOpen: boolean) => void;
+  setIsTodoOpen: (isOpen: boolean) => void;
+  isTodoOpen: boolean;
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   todos: Todo[];
 }
 
-const TodoEditor = ({ setIsEditOpen, setTodos, todos }: TodoEditorProps) => {
+const TodoEditor = ({
+  setIsTodoOpen,
+  setIsEditOpen,
+  isTodoOpen,
+  setTodos,
+  todos,
+}: TodoEditorProps) => {
   const { colors } = useTheme();
+  const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
 
   const handleDelete = (id: string) => {
     setTodos(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleDeleteClick = (id: string) => {
+    Alert.alert(
+      'Delete Todo',
+      'Are you sure you want to delete this todo?',
+      [
+        { text: 'No', style: 'cancel' },
+        { text: 'Yes', style: 'destructive', onPress: () => handleDelete(id) },
+      ],
+      { cancelable: true }
+    );
+  };
+  const handleEdit = (todo: Todo) => {
+    setSelectedTodo(todo);
+    setIsTodoOpen(true);
   };
 
   return (
@@ -38,14 +66,36 @@ const TodoEditor = ({ setIsEditOpen, setTodos, todos }: TodoEditorProps) => {
           <Text style={[styles.buttonText, { color: colors.surface }]}>X</Text>
         </TouchableOpacity>
         {todos.map(todo => (
-          <View key={todo.id} style={[styles.todoDelContainer]}>
+          <TouchableOpacity
+            key={todo.id}
+            style={[styles.todoDelContainer]}
+            onPress={() => handleEdit(todo)}
+            activeOpacity={0.7}
+          >
             <Text style={[styles.title]}>{todo.title}</Text>
-            <TouchableOpacity onPress={() => handleDelete(todo.id)}>
-              <Text style={{ color: 'red' }}>Delete</Text>
+
+            <TouchableOpacity
+              onPress={() => handleDeleteClick(todo.id)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={{ padding: 5 }}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={24}
+                color={colors.text}
+                opacity={0.25}
+              />
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
+      {isTodoOpen && selectedTodo && (
+        <TodoMaker
+          setIsTodoOpen={setIsTodoOpen}
+          setTodos={setTodos}
+          todoToEdit={selectedTodo}
+        />
+      )}
     </View>
   );
 };
@@ -61,6 +111,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
     shadowRadius: 3.84,
+    height: 450,
+    width: 300,
   },
   title: {
     fontSize: 20,
@@ -106,7 +158,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#fff',
+    borderColor: 'rgba(131, 131, 131, 0.4)',
     borderRadius: 10,
     padding: 5,
   },
