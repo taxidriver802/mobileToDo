@@ -29,8 +29,6 @@ const TodoMaker = ({ setIsTodoOpen, setTodos, todoToEdit }: TodoMakerProps) => {
   const handleSubmit = () => {
     if (!title.trim()) return;
     if (todoToEdit) {
-      console.log('attempt');
-
       setTodos(prev =>
         prev.map(t =>
           t.id === todoToEdit.id
