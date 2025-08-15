@@ -2,6 +2,7 @@ import useTheme from '@/hooks/useTheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 import React, { useState } from 'react';
+
 import { TodosProvider } from '../context/TodoContextProvider';
 
 import type { Todo } from './index';

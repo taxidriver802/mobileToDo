@@ -2,7 +2,7 @@ import useTheme from '@/hooks/useTheme';
 import { useFocusEffect } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { ProgressBar } from 'react-native-paper';
 
@@ -67,7 +67,7 @@ export default function Home() {
       <Text style={[styles.motivation, { color: colors.primary }]}>
         {currentMotivation}
       </Text>
-      {showCelebration && (
+      {Platform.OS !== 'web' && showCelebration && (
         <LottieView
           source={require('../../assets/Success.json')}
           autoPlay
