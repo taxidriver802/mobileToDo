@@ -13,6 +13,7 @@ const TabsLayout = () => {
   return (
     <TodosProvider>
       <Tabs
+        initialRouteName="home"
         screenOptions={{
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,

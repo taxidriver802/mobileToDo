@@ -50,7 +50,9 @@ export default function Home() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Home Screen</Text>
+      <Text style={[styles.title, { color: colors.text, marginTop: 45 }]}>
+        Home Screen
+      </Text>
       <Text style={[styles.description, { color: colors.text }]}>
         This is your progress bar!
       </Text>
@@ -72,6 +74,17 @@ export default function Home() {
           loop={false}
           style={{ width: 200, height: 300, position: 'absolute', top: 430 }}
         />
+      )}
+      {todos.length === 0 && (
+        <Text
+          style={[
+            styles.content,
+            { color: colors.text, opacity: 0.5, marginTop: 'auto' },
+          ]}
+        >
+          Click <Text style={{ fontStyle: 'italic' }}>Todos</Text> to create
+          your first todo
+        </Text>
       )}
     </View>
   );
@@ -101,5 +114,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 15,
     textAlign: 'center',
+  },
+  content: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
