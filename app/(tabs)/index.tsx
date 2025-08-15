@@ -3,6 +3,8 @@ import React from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { useTodos } from '../context/TodoContextProvider';
+
 import {
   ScrollView,
   StyleSheet,
@@ -25,7 +27,9 @@ export default function Index() {
   const { colors } = useTheme();
   const [isTodoOpen, setIsTodoOpen] = React.useState(false);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const [todos, setTodos] = React.useState<Todo[]>([]);
+
+  const { todos, setTodos } = useTodos();
+
   const [selectedTodoId, setSelectedTodoId] = React.useState<number | null>(
     null
   );
@@ -74,11 +78,10 @@ export default function Index() {
       style={[styles.container, styles.main, { backgroundColor: colors.bg }]}
     >
       <View>
-        <Text style={[styles.content, { color: colors.text }]}>
-          This is the Todo Screen
-        </Text>
-        <Text style={[styles.content, { color: colors.text }]}>
-          Your added content will appear here.
+        <Text
+          style={[styles.content, { color: colors.text }, { marginTop: 10 }]}
+        >
+          Your Todos
         </Text>
       </View>
 
@@ -87,6 +90,11 @@ export default function Index() {
           style={styles.todosScrollView}
           showsVerticalScrollIndicator={true}
         >
+          {todos.length === 0 && (
+            <Text style={[styles.content, { color: colors.text }]}>
+              Click "+ Add Todo" below
+            </Text>
+          )}
           {todos.length > 0 &&
             todos.map((todo, idx) => (
               <View
@@ -114,12 +122,15 @@ export default function Index() {
                       fontSize: 18,
                       fontWeight: 'bold',
                       marginBottom: 4,
+                      width: 150,
                     }}
                   >
                     {todo.title}
                   </Text>
                   {todo.description ? (
-                    <Text style={{ color: colors.text, fontSize: 15 }}>
+                    <Text
+                      style={{ color: colors.text, fontSize: 15, width: 200 }}
+                    >
                       {todo.description}
                     </Text>
                   ) : null}
@@ -175,14 +186,16 @@ export default function Index() {
             + Add Todo
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={handleTodoEdit}
-        >
-          <Text style={[styles.buttonText, { color: colors.surface }]}>
-            Edit Todo
-          </Text>
-        </TouchableOpacity>
+        {todos.length > 0 && (
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={handleTodoEdit}
+          >
+            <Text style={[styles.buttonText, { color: colors.surface }]}>
+              Edit Todo
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
       {isTodoOpen && (
         <TodoMaker setIsTodoOpen={setIsTodoOpen} setTodos={setTodos} />

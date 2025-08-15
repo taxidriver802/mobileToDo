@@ -1,9 +1,16 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { ProgressBar } from 'react-native-paper';
+
+import { useTodos } from '../context/TodoContextProvider';
 
 export default function Home() {
   const { colors } = useTheme();
+  const { todos } = useTodos();
+
+  const completedTodos = todos.filter(t => t.completed).length;
+  const progress = todos.length > 0 ? completedTodos / todos.length : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -11,9 +18,11 @@ export default function Home() {
       <Text style={[styles.description, { color: colors.text }]}>
         This is the Home screen
       </Text>
-      <Text style={[styles.description, { color: colors.text }]}>
-        You can add more Home options here as needed.
-      </Text>
+      <ProgressBar
+        progress={progress}
+        color={colors.primary}
+        style={{ width: 300, height: 10, borderRadius: 5 }}
+      />
     </View>
   );
 }
