@@ -1,10 +1,16 @@
 import useTheme from '@/hooks/useTheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
-
 import TodoMaker from './TodoMaker';
 
 interface TodoEditorProps {
@@ -40,55 +46,64 @@ const TodoEditor = ({
       { cancelable: true }
     );
   };
+
   const handleEdit = (todo: Todo) => {
     setSelectedTodo(todo);
     setIsTodoOpen(true);
   };
 
   return (
-    <View style={[styles.background, { backgroundColor: colors.bg }]}>
-      <View style={[styles.container, { backgroundColor: colors.surface }]}>
-        <Text
-          style={[
-            styles.title,
-            { color: colors.text },
-            { alignSelf: 'center' },
-            { marginBottom: 5 },
-          ]}
-        >
-          Delete a todo
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.close, { backgroundColor: colors.primary }]}
-          onPress={() => setIsEditOpen(false)}
-        >
-          <Text style={[styles.buttonText, { color: colors.surface }]}>X</Text>
-        </TouchableOpacity>
-        {todos.map(todo => (
-          <TouchableOpacity
-            key={todo.id}
-            style={[styles.todoDelContainer]}
-            onPress={() => handleEdit(todo)}
-            activeOpacity={0.7}
+    <Modal transparent animationType="fade">
+      <View style={styles.modalOverlay}>
+        {/* Inner container */}
+        <View style={[styles.container, { backgroundColor: colors.surface }]}>
+          <Text
+            style={[
+              styles.title,
+              { color: colors.text, alignSelf: 'center', marginBottom: 5 },
+            ]}
           >
-            <Text style={[styles.title]}>{todo.title}</Text>
+            Delete a todo
+          </Text>
 
-            <TouchableOpacity
-              onPress={() => handleDeleteClick(todo.id)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={{ padding: 5 }}
-            >
-              <Ionicons
-                name="trash-outline"
-                size={24}
-                color={colors.text}
-                opacity={0.25}
-              />
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.close, { backgroundColor: colors.primary }]}
+            onPress={() => setIsEditOpen(false)}
+          >
+            <Text style={[styles.buttonText, { color: colors.surface }]}>
+              X
+            </Text>
           </TouchableOpacity>
-        ))}
+
+          {todos.map(todo => (
+            <TouchableOpacity
+              key={todo.id}
+              style={styles.todoDelContainer}
+              onPress={() => handleEdit(todo)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.title, { color: colors.text }]}>
+                {todo.title}
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => handleDeleteClick(todo.id)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={{ padding: 5 }}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={24}
+                  color={colors.text}
+                  opacity={0.25}
+                />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
+
+      {/* Open the TodoMaker if a todo is selected */}
       {isTodoOpen && selectedTodo && (
         <TodoMaker
           setIsTodoOpen={setIsTodoOpen}
@@ -96,48 +111,33 @@ const TodoEditor = ({
           todoToEdit={selectedTodo}
         />
       )}
-    </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    position: 'absolute',
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   container: {
     padding: 20,
     borderRadius: 8,
     margin: 10,
+    marginBottom: 100,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
     shadowRadius: 3.84,
-    height: 450,
+    height: 475,
     width: 300,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'left',
-    color: 'white',
-  },
-  description: {
-    fontSize: 16,
-    marginVertical: 10,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  button: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   buttonText: {
     fontSize: 16,

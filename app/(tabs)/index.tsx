@@ -66,10 +66,16 @@ export default function Index() {
   };
 
   const handleTodoClick = () => {
+    if (isEditOpen) {
+      setIsEditOpen(false);
+    }
     setIsTodoOpen(true);
   };
 
   const handleTodoEdit = () => {
+    if (isTodoOpen) {
+      setIsTodoOpen(false);
+    }
     setIsEditOpen(true);
   };
 
@@ -197,10 +203,10 @@ export default function Index() {
           </TouchableOpacity>
         )}
       </View>
-      {isTodoOpen && (
+      {isTodoOpen && !isEditOpen && (
         <TodoMaker setIsTodoOpen={setIsTodoOpen} setTodos={setTodos} />
       )}
-      {isEditOpen && (
+      {isEditOpen && !isTodoOpen && (
         <TodoEditor
           setIsTodoOpen={setIsTodoOpen}
           setIsEditOpen={setIsEditOpen}
@@ -240,6 +246,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)', // optional dark overlay
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   button: {
     paddingHorizontal: 20,

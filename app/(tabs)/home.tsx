@@ -16,7 +16,10 @@ export default function Home() {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Text style={[styles.title, { color: colors.text }]}>Home Screen</Text>
       <Text style={[styles.description, { color: colors.text }]}>
-        This is the Home screen
+        This is your progress bar!
+      </Text>
+      <Text style={[styles.description, { color: colors.text }]}>
+        ({completedTodos} / {todos.length})
       </Text>
       <ProgressBar
         progress={progress}

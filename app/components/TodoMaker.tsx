@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid/non-secure';
 import React from 'react';
 import {
   Keyboard,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -42,7 +43,7 @@ const TodoMaker = ({ setIsTodoOpen, setTodos, todoToEdit }: TodoMakerProps) => {
         description: description.trim(),
         id: nanoid(),
       };
-      setTodos(prevTodos => [...prevTodos, newTodo]);
+      setTodos(prev => [...prev, newTodo]);
     }
     setTitle('');
     setDescription('');
@@ -50,164 +51,131 @@ const TodoMaker = ({ setIsTodoOpen, setTodos, todoToEdit }: TodoMakerProps) => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={[styles.background, { backgroundColor: colors.bg }]}>
-        <View style={[styles.container, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.title, { color: colors.text }]}>Add a todo</Text>
-          <TouchableOpacity
-            style={[styles.close, { backgroundColor: colors.primary }]}
-            onPress={() => setIsTodoOpen(false)}
-          >
-            <Text style={[styles.buttonText, { color: colors.surface }]}>
-              X
+    <Modal transparent animationType="fade">
+      {/* Outer overlay only dismisses keyboard */}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.container, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Add a todo
             </Text>
-          </TouchableOpacity>
 
-          <View style={[styles.input, { marginVertical: 12 }]}>
-            {title.length > 0 && (
-              <Text
+            <TouchableOpacity
+              style={[styles.close, { backgroundColor: colors.primary }]}
+              onPress={() => setIsTodoOpen(false)}
+            >
+              <Text style={[styles.buttonText, { color: colors.surface }]}>
+                X
+              </Text>
+            </TouchableOpacity>
+
+            {/* Title input */}
+            <View style={[styles.input, { marginVertical: 12 }]}>
+              {title.length > 0 && (
+                <Text
+                  style={{ color: colors.text, fontSize: 16, marginBottom: 6 }}
+                >
+                  Title:
+                </Text>
+              )}
+              <View
                 style={{
-                  color: colors.text,
-                  fontSize: 16,
-                  marginBottom: 6,
-                  textAlign: 'left',
+                  borderWidth: 1,
+                  borderColor: colors.text,
+                  borderRadius: 6,
+                  backgroundColor: colors.bg,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
                 }}
               >
-                Title:
-              </Text>
-            )}
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: colors.text,
-                borderRadius: 6,
-                backgroundColor: colors.bg,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-              }}
-            >
-              <TextInput
-                placeholder="Title:"
-                placeholderTextColor={colors.text + '99'}
-                value={title}
-                onChangeText={setTitle}
-                style={{
-                  color: colors.text,
-                  fontSize: 16,
-                  minHeight: 32,
-                }}
-              />
+                <TextInput
+                  placeholder="Title:"
+                  placeholderTextColor={colors.text + '99'}
+                  value={title}
+                  onChangeText={setTitle}
+                  style={{ color: colors.text, fontSize: 16, minHeight: 32 }}
+                />
+              </View>
             </View>
-          </View>
-          <View style={[styles.input, { marginVertical: 12 }]}>
-            {description.length > 0 && (
-              <Text
+
+            {/* Description input */}
+            <View style={[styles.input, { marginVertical: 12 }]}>
+              {description.length > 0 && (
+                <Text style={{ color: colors.text, fontSize: 16 }}>
+                  Description:
+                </Text>
+              )}
+              <View
                 style={{
-                  color: colors.text,
-                  fontSize: 16,
-                  textAlign: 'left',
+                  borderWidth: 1,
+                  borderColor: colors.text,
+                  borderRadius: 6,
+                  backgroundColor: colors.bg,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  marginVertical: 12,
                 }}
               >
-                Description:
-              </Text>
-            )}
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: colors.text,
-                borderRadius: 6,
-                backgroundColor: colors.bg,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                marginVertical: 12,
-              }}
-            >
-              <TextInput
-                placeholder="Description:"
-                placeholderTextColor={colors.text + '99'}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                style={[
-                  styles.inputDesc,
-                  {
-                    color: colors.text,
-                    fontSize: 16,
-                    minHeight: 32,
-                  },
-                ]}
-              />
+                <TextInput
+                  placeholder="Description:"
+                  placeholderTextColor={colors.text + '99'}
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  style={{ color: colors.text, fontSize: 16, minHeight: 75 }}
+                />
+              </View>
             </View>
-          </View>
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: colors.primary }]}
-            onPress={handleSubmit}
-          >
-            <Text style={[styles.buttonText, { color: colors.surface }]}>
-              Submit
-            </Text>
-          </TouchableOpacity>
+            {/* Submit button */}
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.primary }]}
+              onPress={handleSubmit}
+            >
+              <Text style={[styles.buttonText, { color: colors.surface }]}>
+                Submit
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </TouchableWithoutFeedback>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    position: 'absolute',
-  },
-  input: {
-    width: 250,
-  },
-  inputDesc: {
-    height: 200,
-  },
+  input: { width: 250 },
   container: {
     padding: 25,
     borderRadius: 8,
     margin: 10,
+    marginBottom: 100,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
     shadowRadius: 3.84,
+    height: 475,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  inputDesc: { maxHeight: 400 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  description: {
-    fontSize: 16,
-    marginVertical: 10,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
   button: {
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  close: {
-    width: 25,
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    borderRadius: 7,
-  },
+  buttonText: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  close: { width: 25, position: 'absolute', top: 5, right: 5, borderRadius: 7 },
 });
 
 export default TodoMaker;
