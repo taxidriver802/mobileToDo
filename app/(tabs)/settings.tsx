@@ -13,9 +13,7 @@ export default function Settings() {
       <Text style={[styles.description, { color: colors.text }]}>
         This is the settings screen where you can adjust your preferences.
       </Text>
-      <Text style={[styles.description, { color: colors.text }]}>
-        You can add more settings options here as needed.
-      </Text>
+
       <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.primary }]}
         onPress={toggleDarkMode}
