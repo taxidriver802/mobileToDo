@@ -1,6 +1,9 @@
 import useTheme from '@/hooks/useTheme';
-import React from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import LottieView from 'lottie-react-native';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+
 import { ProgressBar } from 'react-native-paper';
 
 import { useTodos } from '../context/TodoContextProvider';
@@ -9,8 +12,41 @@ export default function Home() {
   const { colors } = useTheme();
   const { todos } = useTodos();
 
+  const [progress, setProgress] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+
   const completedTodos = todos.filter(t => t.completed).length;
-  const progress = todos.length > 0 ? completedTodos / todos.length : 0;
+  const targetProgress = todos.length > 0 ? completedTodos / todos.length : 0;
+
+  const motivationalMessages = [
+    { threshold: 0.25, message: 'Great start! Keep going!' },
+    { threshold: 0.5, message: "You're halfway there! Awesome!" },
+    { threshold: 0.75, message: 'Almost done! Push through!' },
+    { threshold: 1, message: 'You did it! Fantastic work!' },
+  ];
+
+  const currentMotivation =
+    motivationalMessages.filter(m => targetProgress >= m.threshold).slice(-1)[0]
+      ?.message || "Let's get started!";
+
+  // Animate progress when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      const timeout = setTimeout(() => setProgress(targetProgress), 300);
+
+      if (targetProgress === 1) {
+        setShowCelebration(true);
+      } else {
+        setShowCelebration(false);
+      }
+
+      return () => {
+        clearTimeout(timeout);
+        setProgress(0);
+        setShowCelebration(false);
+      };
+    }, [targetProgress])
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -26,6 +62,17 @@ export default function Home() {
         color={colors.primary}
         style={{ width: 300, height: 10, borderRadius: 5 }}
       />
+      <Text style={[styles.motivation, { color: colors.primary }]}>
+        {currentMotivation}
+      </Text>
+      {showCelebration && (
+        <LottieView
+          source={require('../../assets/Success.json')}
+          autoPlay
+          loop={false}
+          style={{ width: 200, height: 300, position: 'absolute', top: 430 }}
+        />
+      )}
     </View>
   );
 }
@@ -49,15 +96,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  button: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+  motivation: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 15,
+    textAlign: 'center',
   },
 });
