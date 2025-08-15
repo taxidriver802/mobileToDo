@@ -27,6 +27,7 @@ export default function Index() {
   const { colors } = useTheme();
   const [isTodoOpen, setIsTodoOpen] = React.useState(false);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
 
   const { todos, setTodos } = useTodos();
 
@@ -61,22 +62,19 @@ export default function Index() {
     }
   };
 
-  const removeTodo = (idx: number) => {
-    setTodos(prev => prev.filter((_, i) => i !== idx));
-  };
-
   const handleTodoClick = () => {
-    if (isEditOpen) {
-      setIsEditOpen(false);
-    }
+    /* setIsEditOpen(false); */
     setIsTodoOpen(true);
   };
 
   const handleTodoEdit = () => {
-    if (isTodoOpen) {
-      setIsTodoOpen(false);
-    }
+    /* setIsTodoOpen(false); */
     setIsEditOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsEditOpen(false);
+    setIsTodoOpen(false);
   };
 
   return (
@@ -94,7 +92,7 @@ export default function Index() {
       <View style={styles.todosWrapper}>
         <ScrollView
           style={styles.todosScrollView}
-          showsVerticalScrollIndicator={true}
+          showsVerticalScrollIndicator={false}
         >
           {todos.length === 0 && (
             <Text style={[styles.content, { color: colors.text }]}>
@@ -128,14 +126,19 @@ export default function Index() {
                       fontSize: 18,
                       fontWeight: 'bold',
                       marginBottom: 4,
-                      width: 150,
+                      width: 225,
                     }}
                   >
                     {todo.title}
                   </Text>
                   {todo.description ? (
                     <Text
-                      style={{ color: colors.text, fontSize: 15, width: 200 }}
+                      style={{
+                        color: colors.text,
+                        opacity: 0.7,
+                        fontSize: 15,
+                        width: 235,
+                      }}
                     >
                       {todo.description}
                     </Text>
@@ -203,18 +206,28 @@ export default function Index() {
           </TouchableOpacity>
         )}
       </View>
-      {isTodoOpen && !isEditOpen && (
-        <TodoMaker setIsTodoOpen={setIsTodoOpen} setTodos={setTodos} />
-      )}
-      {isEditOpen && !isTodoOpen && (
-        <TodoEditor
-          setIsTodoOpen={setIsTodoOpen}
-          setIsEditOpen={setIsEditOpen}
-          isTodoOpen={isTodoOpen}
-          setTodos={setTodos}
-          todos={todos}
-        />
-      )}
+      {isTodoOpen || isEditOpen ? (
+        isTodoOpen ? (
+          <TodoMaker
+            setIsTodoOpen={setIsTodoOpen}
+            setTodos={setTodos}
+            setIsEditOpen={setIsEditOpen}
+            isOpen={isTodoOpen}
+            handleClose={handleClose}
+          />
+        ) : (
+          <TodoEditor
+            setIsTodoOpen={setIsTodoOpen}
+            setIsEditOpen={setIsEditOpen}
+            isTodoOpen={isTodoOpen}
+            setTodos={setTodos}
+            todos={todos}
+            setSelectedTodo={setSelectedTodo}
+            isOpen={isTodoOpen}
+            handleClose={handleClose}
+          />
+        )
+      ) : null}
     </View>
   );
 }

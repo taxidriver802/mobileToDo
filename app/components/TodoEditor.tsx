@@ -4,6 +4,7 @@ import React from 'react';
 import {
   Alert,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,11 +15,14 @@ import type { Todo } from '../(tabs)/index';
 import TodoMaker from './TodoMaker';
 
 interface TodoEditorProps {
+  isOpen: boolean;
   setIsEditOpen: (isOpen: boolean) => void;
   setIsTodoOpen: (isOpen: boolean) => void;
   isTodoOpen: boolean;
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   todos: Todo[];
+  setSelectedTodo: (todo: Todo | null) => void;
+  handleClose?: () => void;
 }
 
 const TodoEditor = ({
@@ -27,6 +31,8 @@ const TodoEditor = ({
   isTodoOpen,
   setTodos,
   todos,
+  isOpen,
+  handleClose,
 }: TodoEditorProps) => {
   const { colors } = useTheme();
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
@@ -49,11 +55,12 @@ const TodoEditor = ({
 
   const handleEdit = (todo: Todo) => {
     setSelectedTodo(todo);
-    setIsTodoOpen(true);
+    setIsEditOpen(false); // close editor
+    setIsTodoOpen(true); // open TodoMaker
   };
 
   return (
-    <Modal transparent animationType="fade">
+    <Modal transparent>
       <View style={styles.modalOverlay}>
         {/* Inner container */}
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -63,43 +70,53 @@ const TodoEditor = ({
               { color: colors.text, alignSelf: 'center', marginBottom: 5 },
             ]}
           >
-            Delete a todo
+            Edit your todos
           </Text>
 
           <TouchableOpacity
             style={[styles.close, { backgroundColor: colors.primary }]}
-            onPress={() => setIsEditOpen(false)}
+            onPress={handleClose}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           >
             <Text style={[styles.buttonText, { color: colors.surface }]}>
               X
             </Text>
           </TouchableOpacity>
 
-          {todos.map(todo => (
-            <TouchableOpacity
-              key={todo.id}
-              style={styles.todoDelContainer}
-              onPress={() => handleEdit(todo)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.title, { color: colors.text }]}>
-                {todo.title}
-              </Text>
-
+          <ScrollView
+            style={{ maxHeight: 400 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {todos.map(todo => (
               <TouchableOpacity
-                onPress={() => handleDeleteClick(todo.id)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                style={{ padding: 5 }}
+                key={todo.id}
+                style={styles.todoDelContainer}
+                onPress={() => handleEdit(todo)}
+                activeOpacity={0.7}
               >
-                <Ionicons
-                  name="trash-outline"
-                  size={24}
-                  color={colors.text}
-                  opacity={0.25}
-                />
+                <Text
+                  style={[styles.title, { color: colors.text, maxWidth: 200 }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {todo.title}
+                </Text>
+
+                <TouchableOpacity
+                  onPress={() => handleDeleteClick(todo.id)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={{ padding: 5 }}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={24}
+                    color={colors.text}
+                    opacity={0.25}
+                  />
+                </TouchableOpacity>
               </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
+            ))}
+          </ScrollView>
         </View>
       </View>
 
@@ -109,6 +126,7 @@ const TodoEditor = ({
           setIsTodoOpen={setIsTodoOpen}
           setTodos={setTodos}
           todoToEdit={selectedTodo}
+          isOpen={isTodoOpen}
         />
       )}
     </Modal>
