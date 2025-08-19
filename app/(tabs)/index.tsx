@@ -31,9 +31,9 @@ export default function Index() {
 
   const { todos, setTodos } = useTodos();
 
-  const [selectedTodoId, setSelectedTodoId] = React.useState<number | null>(
+  /*  const [selectedTodoId, setSelectedTodoId] = React.useState<number | null>(
     null
-  );
+  ); */
 
   React.useEffect(() => {
     loadTodos();
