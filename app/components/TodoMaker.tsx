@@ -1,6 +1,6 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TodoMaker = () => {
   const { colors } = useTheme();
@@ -11,9 +11,18 @@ const TodoMaker = () => {
         <Text style={[styles.title, { color: colors.text }]}>
           Create a todo
         </Text>
-        <Text style={[styles.description, { color: colors.text }]}>
-          This is where you can add a new todo item.
-        </Text>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primary }]}
+        >
+          <Text
+            style={[styles.description, { color: colors.text }]}
+            onPress={() => {
+              console.log('pressed');
+            }}
+          >
+            + Todo
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -41,6 +50,19 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  button: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
 
