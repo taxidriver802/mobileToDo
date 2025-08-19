@@ -1,38 +1,252 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { useTodos } from '../context/TodoContextProvider';
+
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import TodoEditor from '../components/TodoEditor';
 import TodoMaker from '../components/TodoMaker';
+
+export interface Todo {
+  title: string;
+  description: string;
+  completed?: boolean;
+  id: string;
+}
 
 export default function Index() {
   const { colors } = useTheme();
   const [isTodoOpen, setIsTodoOpen] = React.useState(false);
-  const handleTodoClick = () => {
-    // Handle the todo click action here
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
 
+  const { todos, setTodos } = useTodos();
+
+  /*  const [selectedTodoId, setSelectedTodoId] = React.useState<number | null>(
+    null
+  ); */
+
+  React.useEffect(() => {
+    loadTodos();
+  }, []);
+
+  React.useEffect(() => {
+    saveTodos();
+  }, [todos]);
+
+  const loadTodos = async () => {
+    try {
+      const storedTodos = await AsyncStorage.getItem('todos');
+      if (storedTodos) {
+        setTodos(JSON.parse(storedTodos));
+      }
+    } catch (error) {
+      console.error('Error loading todos:', error);
+    }
+  };
+
+  const saveTodos = async () => {
+    try {
+      await AsyncStorage.setItem('todos', JSON.stringify(todos));
+    } catch (error) {
+      console.error('Error saving todos:', error);
+    }
+  };
+
+  const handleTodoClick = () => {
+    /* setIsEditOpen(false); */
     setIsTodoOpen(true);
   };
+
+  const handleTodoEdit = () => {
+    /* setIsTodoOpen(false); */
+    setIsEditOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsEditOpen(false);
+    setIsTodoOpen(false);
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.content, { color: colors.text }]}>
-        This is the Todo Screen
-      </Text>
-      <Text style={[styles.content, { color: colors.text }]}>
-        Your added content will appear here.
-      </Text>
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.primary }]}
-        onPress={handleTodoClick}
-      >
-        <Text style={[styles.buttonText, { color: colors.surface }]}>
-          + Add Todo
+    <View
+      style={[styles.container, styles.main, { backgroundColor: colors.bg }]}
+    >
+      <View>
+        <Text
+          style={[styles.content, { color: colors.text }, { marginTop: 10 }]}
+        >
+          Your Todos
         </Text>
-      </TouchableOpacity>
-      {isTodoOpen && <TodoMaker />}
+      </View>
+
+      <View style={styles.todosWrapper}>
+        <ScrollView
+          style={styles.todosScrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {todos.length === 0 && (
+            <Text style={[styles.content, { color: colors.text }]}>
+              Click "+ Add Todo" below
+            </Text>
+          )}
+          {todos.length > 0 &&
+            todos.map((todo, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.todoContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderRadius: 8,
+                    padding: 16,
+                    marginVertical: 6,
+                    width: 300,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  },
+                ]}
+              >
+                <View>
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      marginBottom: 4,
+                      width: 225,
+                    }}
+                  >
+                    {todo.title}
+                  </Text>
+                  {todo.description ? (
+                    <Text
+                      style={{
+                        color: colors.text,
+                        opacity: 0.7,
+                        fontSize: 15,
+                        width: 235,
+                      }}
+                    >
+                      {todo.description}
+                    </Text>
+                  ) : null}
+                </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    // Toggle completion for this todo
+                    setTodos(prev =>
+                      prev.map((t, i) =>
+                        i === idx ? { ...t, completed: !t.completed } : t
+                      )
+                    );
+                  }}
+                  style={{
+                    alignSelf: 'flex-start',
+                    marginTop: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 14,
+                      borderWidth: 2,
+                      borderColor: todo.completed ? 'green' : colors.text,
+                      backgroundColor: todo.completed ? 'green' : 'transparent',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {todo.completed && (
+                      <View
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: 6,
+                          backgroundColor: '#fff',
+                        }}
+                      />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
+            ))}
+        </ScrollView>
+      </View>
+      <View style={[styles.todoButtons]}>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primary }]}
+          onPress={handleTodoClick}
+        >
+          <Text style={[styles.buttonText, { color: colors.surface }]}>
+            + Add Todo
+          </Text>
+        </TouchableOpacity>
+        {todos.length > 0 && (
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={handleTodoEdit}
+          >
+            <Text style={[styles.buttonText, { color: colors.surface }]}>
+              Edit Todo
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      {isTodoOpen || isEditOpen ? (
+        isTodoOpen ? (
+          <TodoMaker
+            setIsTodoOpen={setIsTodoOpen}
+            setTodos={setTodos}
+            setIsEditOpen={setIsEditOpen}
+            isOpen={isTodoOpen}
+            handleClose={handleClose}
+          />
+        ) : (
+          <TodoEditor
+            setIsTodoOpen={setIsTodoOpen}
+            setIsEditOpen={setIsEditOpen}
+            isTodoOpen={isTodoOpen}
+            setTodos={setTodos}
+            todos={todos}
+            setSelectedTodo={setSelectedTodo}
+            isOpen={isTodoOpen}
+            handleClose={handleClose}
+          />
+        )
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  main: {
+    justifyContent: 'space-around',
+  },
+  todosWrapper: {
+    height: 400,
+    width: 300,
+  },
+  todosScrollView: {
+    flex: 1,
+  },
+  todoButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -41,10 +255,16 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   content: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)', // optional dark overlay
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   button: {
     paddingHorizontal: 20,
@@ -63,5 +283,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  todoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 });
