@@ -2,26 +2,23 @@ import useTheme from '@/hooks/useTheme';
 import { useFocusEffect } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import React, { useCallback, useState } from 'react';
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
+import TodoCard from '../components/TodoCard';
 import { useTodos } from '../context/TodoContextProvider';
 
 export default function Home() {
   const { colors } = useTheme();
-  const { todos, setTodos } = useTodos();
-
-  const [progress, setProgress] = useState(0);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const { todos } = useTodos();
 
   const completedTodos = todos.filter(t => t.completed).length;
-  const targetProgress = todos.length > 0 ? completedTodos / todos.length : 0;
+  const totalTodos = todos.length;
+  const isAllCompleted = totalTodos > 0 && completedTodos === totalTodos;
+  const targetProgress = totalTodos > 0 ? completedTodos / totalTodos : 0;
+
+  const [progress, setProgress] = useState(targetProgress);
+  const [showCelebration, setShowCelebration] = useState(isAllCompleted);
+  const [celebrationKey, setCelebrationKey] = useState(0);
 
   const motivationalMessages = [
     { threshold: 0.25, message: 'Great start! Keep going!' },
@@ -36,16 +33,17 @@ export default function Home() {
 
   useFocusEffect(
     useCallback(() => {
-      const timeout = setTimeout(() => setProgress(targetProgress), 300);
+      // Animate the progress bar
+      setProgress(targetProgress);
 
-      setShowCelebration(targetProgress === 1);
-
-      return () => {
-        clearTimeout(timeout);
-        setProgress(0);
+      // Decide whether to show the celebration
+      if (isAllCompleted) {
+        setShowCelebration(true);
+        setCelebrationKey(prevKey => prevKey + 1);
+      } else {
         setShowCelebration(false);
-      };
-    }, [targetProgress])
+      }
+    }, [targetProgress, isAllCompleted])
   );
 
   const activeTodos = todos.filter(todo => !todo.completed);
@@ -56,140 +54,71 @@ export default function Home() {
         Home Screen
       </Text>
 
-      {todos.length > 0 ? (
+      {totalTodos > 0 ? (
         <>
           <Text
             style={[
               styles.description,
               styles.todayTitle,
-              { color: colors.text },
+              { color: colors.text, marginBottom: 0 },
             ]}
           >
-            Today's Todos!
+            Today's goals!
           </Text>
 
           {activeTodos.length > 0 ? (
-            activeTodos.map(todo => (
-              <View
-                key={todo.id}
-                style={[
-                  styles.todoContainer,
-                  {
-                    backgroundColor: colors.surface,
-                    borderRadius: 8,
-                    padding: 16,
-                    marginVertical: 6,
-                    width: 300,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  },
-                ]}
+            <View style={styles.todosWrapper}>
+              <ScrollView
+                style={styles.todosScrollView}
+                showsVerticalScrollIndicator={false}
               >
-                <View>
-                  <Text
-                    style={{
-                      color: colors.text,
-                      fontSize: 18,
-                      fontWeight: 'bold',
-                      marginBottom: 4,
-                      width: 225,
-                    }}
-                  >
-                    {todo.title}
-                  </Text>
-                  {todo.description && (
-                    <Text
-                      style={{
-                        color: colors.text,
-                        opacity: 0.7,
-                        fontSize: 15,
-                        width: 235,
-                      }}
-                    >
-                      {todo.description}
-                    </Text>
-                  )}
-                </View>
-
-                <TouchableOpacity
-                  onPress={() =>
-                    setTodos(prev =>
-                      prev.map(t =>
-                        t.id === todo.id ? { ...t, completed: !t.completed } : t
-                      )
-                    )
-                  }
-                  style={{
-                    alignSelf: 'flex-start',
-                    marginTop: 10,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 14,
-                      borderWidth: 2,
-                      borderColor: todo.completed ? 'green' : colors.text,
-                      backgroundColor: todo.completed ? 'green' : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {todo.completed && (
-                      <View
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: 6,
-                          backgroundColor: '#fff',
-                        }}
-                      />
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ))
+                {activeTodos.map(todo => (
+                  <TodoCard key={todo.id} todo={todo} />
+                ))}
+              </ScrollView>
+            </View>
           ) : (
-            <View style={{ marginVertical: 20 }}>
+            <View style={{ marginVertical: 150 }}>
               <Text style={[styles.description, { color: colors.text }]}>
                 You've completed all of your todos today!
               </Text>
-              <Text style={[styles.description, { color: colors.text }]}>
+              <Text
+                style={[
+                  styles.description,
+                  { color: colors.text, marginVertical: 75 },
+                ]}
+              >
                 Come back tomorrow to keep your streak strong!
               </Text>
             </View>
           )}
 
-          <Text
+          {/* <Text
             style={[
               styles.description,
-              { color: colors.text, marginTop: 'auto' },
+              { color: colors.text, marginTop: 'auto', fontSize: 16 },
             ]}
           >
-            ({completedTodos} / {todos.length})
-          </Text>
-
-          <ProgressBar
-            progress={progress}
-            color={colors.primary}
-            style={{
-              width: 300,
-              height: 10,
-              borderRadius: 5,
-              marginTop: 'auto',
-            }}
-          />
-
+            ({completedTodos} / {totalTodos})
+          </Text> */}
+          <View style={{ marginTop: 'auto' }}>
+            <ProgressBar
+              progress={progress}
+              color={colors.primary}
+              style={{
+                width: 300,
+                height: 10,
+                borderRadius: 5,
+              }}
+            />
+          </View>
           <Text style={[styles.motivation, { color: colors.primary }]}>
             {currentMotivation}
           </Text>
 
           {Platform.OS !== 'web' && showCelebration && (
             <LottieView
+              key={celebrationKey}
               source={require('../../assets/Success.json')}
               autoPlay
               loop={false}
@@ -197,7 +126,8 @@ export default function Home() {
                 width: 200,
                 height: 300,
                 position: 'absolute',
-                top: 300,
+                top: 430,
+                zIndex: 1,
               }}
             />
           )}
@@ -231,7 +161,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   description: {
-    fontSize: 16,
+    fontSize: 20,
     marginBottom: 10,
     textAlign: 'center',
     lineHeight: 24,
@@ -256,5 +186,12 @@ const styles = StyleSheet.create({
   todoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  todosWrapper: {
+    height: 560,
+    width: 300,
+  },
+  todosScrollView: {
+    flex: 1,
   },
 });

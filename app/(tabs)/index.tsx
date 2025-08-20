@@ -1,4 +1,5 @@
 import useTheme from '@/hooks/useTheme';
+import { useRouter } from 'expo-router';
 import React from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,6 +14,7 @@ import {
   View,
 } from 'react-native';
 
+import Loading from '../components/loading';
 import TodoEditor from '../components/TodoEditor';
 import TodoMaker from '../components/TodoMaker';
 
@@ -28,12 +30,20 @@ export default function Index() {
   const [isTodoOpen, setIsTodoOpen] = React.useState(false);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
+  const [redirecting, setRedirecting] = React.useState(true);
 
   const { todos, setTodos } = useTodos();
 
-  /*  const [selectedTodoId, setSelectedTodoId] = React.useState<number | null>(
-    null
-  ); */
+  const router = useRouter();
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace('/home');
+      setRedirecting(false);
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   React.useEffect(() => {
     loadTodos();
@@ -63,12 +73,10 @@ export default function Index() {
   };
 
   const handleTodoClick = () => {
-    /* setIsEditOpen(false); */
     setIsTodoOpen(true);
   };
 
   const handleTodoEdit = () => {
-    /* setIsTodoOpen(false); */
     setIsEditOpen(true);
   };
 
@@ -76,6 +84,10 @@ export default function Index() {
     setIsEditOpen(false);
     setIsTodoOpen(false);
   };
+
+  if (redirecting) {
+    return <Loading />;
+  }
 
   return (
     <View
@@ -237,7 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   todosWrapper: {
-    height: 400,
+    height: 500,
     width: 300,
   },
   todosScrollView: {

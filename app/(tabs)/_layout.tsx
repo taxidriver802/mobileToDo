@@ -9,8 +9,8 @@ import type { Todo } from './index';
 
 const TabsLayout = () => {
   const { colors } = useTheme();
-
   const [todos, setTodos] = useState<Todo[]>([]);
+
   return (
     <TodosProvider>
       <Tabs
