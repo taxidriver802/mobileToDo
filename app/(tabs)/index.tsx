@@ -216,27 +216,24 @@ export default function Index() {
           </TouchableOpacity>
         )}
       </View>
-      {isTodoOpen || isEditOpen ? (
-        isTodoOpen ? (
-          <TodoMaker
-            setIsTodoOpen={setIsTodoOpen}
-            setTodos={setTodos}
-            setIsEditOpen={setIsEditOpen}
-            isOpen={isTodoOpen}
-            handleClose={handleClose}
-          />
-        ) : (
-          <TodoEditor
-            setIsTodoOpen={setIsTodoOpen}
-            setIsEditOpen={setIsEditOpen}
-            isTodoOpen={isTodoOpen}
-            setTodos={setTodos}
-            todos={todos}
-            setSelectedTodo={setSelectedTodo}
-            isOpen={isTodoOpen}
-            handleClose={handleClose}
-          />
-        )
+      {isTodoOpen ? (
+        <TodoMaker
+          setIsTodoOpen={setIsTodoOpen}
+          setTodos={setTodos}
+          todoToEdit={selectedTodo}
+          isOpen={isTodoOpen}
+          handleClose={handleClose}
+        />
+      ) : isEditOpen ? (
+        <TodoEditor
+          setIsTodoOpen={setIsTodoOpen}
+          setIsEditOpen={setIsEditOpen}
+          setTodos={setTodos}
+          todos={todos}
+          setSelectedTodo={setSelectedTodo}
+          isOpen={isEditOpen}
+          handleClose={handleClose}
+        />
       ) : null}
     </View>
   );

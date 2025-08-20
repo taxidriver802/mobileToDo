@@ -12,15 +12,15 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
-import TodoMaker from './TodoMaker';
+// We no longer need to import TodoMaker here
 
 interface TodoEditorProps {
   isOpen: boolean;
   setIsEditOpen: (isOpen: boolean) => void;
   setIsTodoOpen: (isOpen: boolean) => void;
-  isTodoOpen: boolean;
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   todos: Todo[];
+  // This prop is the key to the solution
   setSelectedTodo: (todo: Todo | null) => void;
   handleClose?: () => void;
 }
@@ -28,14 +28,16 @@ interface TodoEditorProps {
 const TodoEditor = ({
   setIsTodoOpen,
   setIsEditOpen,
-  isTodoOpen,
   setTodos,
   todos,
-  isOpen,
+  // --- CHANGE 1: Destructure the setSelectedTodo prop ---
+  setSelectedTodo,
   handleClose,
 }: TodoEditorProps) => {
   const { colors } = useTheme();
-  const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
+
+  // --- CHANGE 2: Remove the local selectedTodo state entirely ---
+  // const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
 
   const handleDelete = (id: string) => {
     setTodos(prev => prev.filter(t => t.id !== id));
@@ -54,15 +56,15 @@ const TodoEditor = ({
   };
 
   const handleEdit = (todo: Todo) => {
+    // --- CHANGE 3: Use the prop to update the PARENT's state ---
     setSelectedTodo(todo);
-    setIsEditOpen(false); // close editor
-    setIsTodoOpen(true); // open TodoMaker
+    setIsEditOpen(false); // Tell the parent to close this modal
+    setIsTodoOpen(true); // Tell the parent to open the TodoMaker modal
   };
 
   return (
     <Modal transparent>
       <View style={styles.modalOverlay}>
-        {/* Inner container */}
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <Text
             style={[
@@ -91,7 +93,7 @@ const TodoEditor = ({
               <TouchableOpacity
                 key={todo.id}
                 style={styles.todoDelContainer}
-                onPress={() => handleEdit(todo)}
+                onPress={() => handleEdit(todo)} // This now works correctly
                 activeOpacity={0.7}
               >
                 <Text
@@ -111,7 +113,6 @@ const TodoEditor = ({
                     name="trash-outline"
                     size={24}
                     color={colors.text}
-                    opacity={0.25}
                   />
                 </TouchableOpacity>
               </TouchableOpacity>
@@ -120,19 +121,13 @@ const TodoEditor = ({
         </View>
       </View>
 
-      {/* Open the TodoMaker if a todo is selected */}
-      {isTodoOpen && selectedTodo && (
-        <TodoMaker
-          setIsTodoOpen={setIsTodoOpen}
-          setTodos={setTodos}
-          todoToEdit={selectedTodo}
-          isOpen={isTodoOpen}
-        />
-      )}
+      {/* --- CHANGE 4: Remove the logic to render TodoMaker from here --- */}
+      {/* The parent component (index.tsx) is now responsible for this */}
     </Modal>
   );
 };
 
+// Styles remain the same
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,

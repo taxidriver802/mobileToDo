@@ -19,8 +19,8 @@ import type { Todo } from '../(tabs)/index';
 interface TodoMakerProps {
   setIsTodoOpen: (isOpen: boolean) => void;
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
-  todoToEdit?: Todo;
-  setIsEditOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  todoToEdit?: Todo | null;
+  
   isOpen: boolean;
   handleClose?: () => void;
 }
@@ -88,7 +88,6 @@ const TodoMaker = ({
   setIsTodoOpen,
   setTodos,
   todoToEdit,
-  setIsEditOpen,
   handleClose,
 }: TodoMakerProps) => {
   const { colors } = useTheme();
