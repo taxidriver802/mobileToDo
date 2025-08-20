@@ -93,11 +93,16 @@ export default function Index() {
     <View
       style={[styles.container, styles.main, { backgroundColor: colors.bg }]}
     >
-      <View>
+      <View style={{ width: '100%' }}>
         <Text
-          style={[styles.content, { color: colors.text }, { marginTop: 10 }]}
+          style={[
+            styles.content,
+            styles.todayTitle,
+            { color: colors.text },
+            { marginTop: 30, fontSize: 27 },
+          ]}
         >
-          Your Todos
+          Your Goals
         </Text>
       </View>
 
@@ -108,7 +113,7 @@ export default function Index() {
         >
           {todos.length === 0 && (
             <Text style={[styles.content, { color: colors.text }]}>
-              Click "+ Add Todo" below
+              Click "+ Add Goal" below
             </Text>
           )}
           {todos.length > 0 &&
@@ -131,14 +136,14 @@ export default function Index() {
                   },
                 ]}
               >
-                <View>
+                <View style={{ justifyContent: 'center' }}>
                   <Text
                     style={{
                       color: colors.text,
                       fontSize: 18,
                       fontWeight: 'bold',
                       marginBottom: 4,
-                      width: 225,
+                      width: 235,
                     }}
                   >
                     {todo.title}
@@ -158,7 +163,6 @@ export default function Index() {
                 </View>
                 <TouchableOpacity
                   onPress={() => {
-                    // Toggle completion for this todo
                     setTodos(prev =>
                       prev.map((t, i) =>
                         i === idx ? { ...t, completed: !t.completed } : t
@@ -166,33 +170,27 @@ export default function Index() {
                     );
                   }}
                   style={{
-                    alignSelf: 'flex-start',
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    borderWidth: 2,
+                    borderColor: todo.completed ? 'green' : colors.text,
+                    backgroundColor: todo.completed ? 'green' : 'transparent',
+                    alignItems: 'center', // To center the inner checkmark
+                    justifyContent: 'center', // To center the inner checkmark
                     marginTop: 10,
                   }}
                 >
-                  <View
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 14,
-                      borderWidth: 2,
-                      borderColor: todo.completed ? 'green' : colors.text,
-                      backgroundColor: todo.completed ? 'green' : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {todo.completed && (
-                      <View
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: 6,
-                          backgroundColor: '#fff',
-                        }}
-                      />
-                    )}
-                  </View>
+                  {todo.completed && (
+                    <View
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 6,
+                        backgroundColor: '#fff',
+                      }}
+                    />
+                  )}
                 </TouchableOpacity>
               </View>
             ))}
@@ -204,7 +202,7 @@ export default function Index() {
           onPress={handleTodoClick}
         >
           <Text style={[styles.buttonText, { color: colors.surface }]}>
-            + Add Todo
+            + Add Goal
           </Text>
         </TouchableOpacity>
         {todos.length > 0 && (
@@ -299,5 +297,10 @@ const styles = StyleSheet.create({
   todoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  todayTitle: {
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
+    width: '100%',
   },
 });

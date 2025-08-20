@@ -49,16 +49,17 @@ export default function TodoCard({ todo }: TodoCardProps) {
         shadowRadius: 2,
         elevation: 1,
         flexDirection: 'row',
+        justifyContent: 'space-between',
       }}
     >
-      <View>
+      <View style={{ justifyContent: 'center' }}>
         <Text
           style={{
             color: colors.text,
             fontSize: 18,
             fontWeight: 'bold',
             marginBottom: 4,
-            width: 225,
+            width: 235,
           }}
         >
           {todo.title}
@@ -81,9 +82,8 @@ export default function TodoCard({ todo }: TodoCardProps) {
         onPress={() => toggleComplete(todo)}
         style={{
           alignSelf: 'flex-start',
+          justifyContent: 'flex-end',
           marginTop: 10,
-          borderColor: todo.completed ? 'green' : colors.text,
-          backgroundColor: todo.completed ? 'green' : 'transparent',
         }}
       >
         <View

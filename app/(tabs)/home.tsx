@@ -7,6 +7,8 @@ import { ProgressBar } from 'react-native-paper';
 import TodoCard from '../components/TodoCard';
 import { useTodos } from '../context/TodoContextProvider';
 
+import { motivationalMessages } from '../../utils/utils';
+
 export default function Home() {
   const { colors } = useTheme();
   const { todos } = useTodos();
@@ -20,16 +22,16 @@ export default function Home() {
   const [showCelebration, setShowCelebration] = useState(isAllCompleted);
   const [celebrationKey, setCelebrationKey] = useState(0);
 
-  const motivationalMessages = [
-    { threshold: 0.25, message: 'Great start! Keep going!' },
-    { threshold: 0.5, message: "You're halfway there! Awesome!" },
-    { threshold: 0.75, message: 'Almost done! Push through!' },
-    { threshold: 1, message: 'You did it! Fantastic work!' },
-  ];
+  const currentMotivation = (() => {
+    const passedThresholds = motivationalMessages.filter(
+      m => targetProgress >= m.threshold
+    );
+    const currentThreshold = passedThresholds.slice(-1)[0];
 
-  const currentMotivation =
-    motivationalMessages.filter(m => targetProgress >= m.threshold).slice(-1)[0]
-      ?.message || "Let's get started!";
+    if (!currentThreshold) return "Let's get started!";
+    const { messages } = currentThreshold;
+    return messages[Math.floor(Math.random() * messages.length)];
+  })();
 
   useFocusEffect(
     useCallback(() => {
@@ -50,24 +52,33 @@ export default function Home() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.text, marginTop: 45 }]}>
-        Home Screen
-      </Text>
-
+      {totalTodos === 0 && (
+        <>
+          <Text
+            style={[
+              styles.title,
+              styles.todayTitle,
+              { color: colors.text, marginBottom: 0, marginTop: 45 },
+            ]}
+          >
+            Set goals for today
+          </Text>
+        </>
+      )}
       {totalTodos > 0 ? (
         <>
           <Text
             style={[
-              styles.description,
+              styles.title,
               styles.todayTitle,
-              { color: colors.text, marginBottom: 0 },
+              { color: colors.text, marginBottom: 0, marginTop: 45 },
             ]}
           >
-            Today's goals!
+            Today's goals
           </Text>
 
           {activeTodos.length > 0 ? (
-            <View style={styles.todosWrapper}>
+            <View style={[styles.todosWrapper, { marginTop: 50 }]}>
               <ScrollView
                 style={styles.todosScrollView}
                 showsVerticalScrollIndicator={false}
@@ -93,14 +104,6 @@ export default function Home() {
             </View>
           )}
 
-          {/* <Text
-            style={[
-              styles.description,
-              { color: colors.text, marginTop: 'auto', fontSize: 16 },
-            ]}
-          >
-            ({completedTodos} / {totalTodos})
-          </Text> */}
           <View style={{ marginTop: 'auto' }}>
             <ProgressBar
               progress={progress}
@@ -139,8 +142,9 @@ export default function Home() {
             { color: colors.text, opacity: 0.5, marginTop: 'auto' },
           ]}
         >
-          Click <Text style={{ fontStyle: 'italic' }}>Todos</Text> to create
-          your first todo
+          Click <Text style={{ fontStyle: 'italic' }}>Goals</Text> to create
+          {'\n'}
+          your first daily goal
         </Text>
       )}
     </View>
@@ -188,7 +192,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   todosWrapper: {
-    height: 560,
+    height: 500,
     width: 300,
   },
   todosScrollView: {

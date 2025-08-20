@@ -36,7 +36,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Todos',
+            title: 'Goals',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="flash-outline" size={size} color={color} />
             ),
