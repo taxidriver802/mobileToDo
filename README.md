@@ -43,8 +43,8 @@ Each day your goals reset so you can come back, complete them again, and build s
 
 ## 📸 Screenshots
 
-![Add or Edit goals](assets/images/IMG_0503.PNG)
-![Home page](assets/images/IMG_0504.PNG)
+<img src="assets/images/IMG_0503.PNG" width="350">
+<img src="assets/images/IMG_0504.PNG" width="350">
 
 ---
 
