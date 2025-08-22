@@ -23,6 +23,7 @@ export interface Todo {
   description: string;
   completed?: boolean;
   id: string;
+  lastUpdated: string;
 }
 
 export default function Index() {
@@ -31,6 +32,7 @@ export default function Index() {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
   const [redirecting, setRedirecting] = React.useState(true);
+  const [streak, setStreak] = React.useState(0);
 
   const { todos, setTodos } = useTodos();
 
@@ -51,6 +53,15 @@ export default function Index() {
 
   React.useEffect(() => {
     saveTodos();
+  }, [todos]);
+
+  React.useEffect(() => {
+    const allCompleted =
+      todos.length > 0 && todos.every(todo => todo.completed);
+
+    if (allCompleted) {
+      console.log('all completed ');
+    }
   }, [todos]);
 
   const loadTodos = async () => {
@@ -83,6 +94,7 @@ export default function Index() {
   const handleClose = () => {
     setIsEditOpen(false);
     setIsTodoOpen(false);
+    setSelectedTodo(null);
   };
 
   if (redirecting) {
@@ -221,6 +233,7 @@ export default function Index() {
           setIsTodoOpen={setIsTodoOpen}
           setTodos={setTodos}
           todoToEdit={selectedTodo}
+          setSelectedTodo={setSelectedTodo}
           isOpen={isTodoOpen}
           handleClose={handleClose}
         />

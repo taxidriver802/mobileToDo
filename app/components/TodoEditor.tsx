@@ -56,10 +56,9 @@ const TodoEditor = ({
   };
 
   const handleEdit = (todo: Todo) => {
-    // --- CHANGE 3: Use the prop to update the PARENT's state ---
     setSelectedTodo(todo);
-    setIsEditOpen(false); // Tell the parent to close this modal
-    setIsTodoOpen(true); // Tell the parent to open the TodoMaker modal
+    setIsEditOpen(false);
+    setIsTodoOpen(true);
   };
 
   return (
@@ -72,7 +71,7 @@ const TodoEditor = ({
               { color: colors.text, alignSelf: 'center', marginBottom: 5 },
             ]}
           >
-            Edit your todos
+            Edit your goals
           </Text>
 
           <TouchableOpacity
@@ -120,14 +119,10 @@ const TodoEditor = ({
           </ScrollView>
         </View>
       </View>
-
-      {/* --- CHANGE 4: Remove the logic to render TodoMaker from here --- */}
-      {/* The parent component (index.tsx) is now responsible for this */}
     </Modal>
   );
 };
 
-// Styles remain the same
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
