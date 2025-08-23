@@ -3,6 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Settings from '../components/Settings';
+import WeekTracker from '../components/tracker';
 import { useTodos } from '../context/TodoContextProvider';
 
 export default function Profile() {
@@ -29,6 +30,10 @@ export default function Profile() {
           Profile
         </Text>
       </View>
+
+      <WeekTracker
+        completedDays={[false, false, false, false, false, false, false]}
+      />
 
       <TouchableOpacity
         style={[

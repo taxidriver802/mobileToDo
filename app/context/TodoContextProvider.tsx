@@ -11,10 +11,15 @@ export type Todo = {
   completed?: boolean;
 };
 
+export type CompletionHistory = {
+  [dateString: string]: boolean;
+};
+
 type TodosContextType = {
   todos: Todo[];
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   streak: number;
+  completionHistory: CompletionHistory;
 };
 
 const TodosContext = createContext<TodosContextType | undefined>(undefined);
@@ -23,6 +28,9 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [streak, setStreak] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [completionHistory, setCompletionHistory] = useState<CompletionHistory>(
+    {}
+  );
 
   // --- EFFECT 1: Handles initial loading and the daily reset check ---
   React.useEffect(() => {
@@ -31,14 +39,28 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       const storedTodos = await AsyncStorage.getItem('todos');
       const storedStreak = await AsyncStorage.getItem('streak');
       const lastCheckDate = await AsyncStorage.getItem('lastDailyCheckDate');
+      const storedHistory = await AsyncStorage.getItem('completionHistory');
       const initialTodos: Todo[] = storedTodos ? JSON.parse(storedTodos) : [];
 
       if (storedStreak) {
         setStreak(parseInt(storedStreak, 10));
       }
+      if (storedHistory) setCompletionHistory(JSON.parse(storedHistory));
 
       if (lastCheckDate !== today && initialTodos.length > 0) {
         const allWereCompleted = initialTodos.every(todo => todo.completed);
+
+        // Record the result of the PREVIOUS day before resetting
+        const newHistory = {
+          ...completionHistory,
+          [lastCheckDate!]: allWereCompleted,
+        };
+        setCompletionHistory(newHistory);
+        await AsyncStorage.setItem(
+          'completionHistory',
+          JSON.stringify(newHistory)
+        );
+
         if (!allWereCompleted) {
           setStreak(0);
           await AsyncStorage.setItem('streak', '0');
@@ -115,7 +137,9 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   }, [todos, isLoading]);
 
   return (
-    <TodosContext.Provider value={{ todos, setTodos, streak }}>
+    <TodosContext.Provider
+      value={{ todos, setTodos, streak, completionHistory }}
+    >
       {children}
     </TodosContext.Provider>
   );
