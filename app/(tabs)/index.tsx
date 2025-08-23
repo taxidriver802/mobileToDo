@@ -2,8 +2,6 @@ import useTheme from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { useTodos } from '../context/TodoContextProvider';
 
 import {
@@ -23,7 +21,6 @@ export interface Todo {
   description: string;
   completed?: boolean;
   id: string;
-  lastUpdated: string;
 }
 
 export default function Index() {
@@ -32,7 +29,6 @@ export default function Index() {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
   const [redirecting, setRedirecting] = React.useState(true);
-  const [streak, setStreak] = React.useState(0);
 
   const { todos, setTodos } = useTodos();
 
@@ -47,43 +43,8 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, []);
 
-  React.useEffect(() => {
-    loadTodos();
-  }, []);
-
-  React.useEffect(() => {
-    saveTodos();
-  }, [todos]);
-
-  React.useEffect(() => {
-    const allCompleted =
-      todos.length > 0 && todos.every(todo => todo.completed);
-
-    if (allCompleted) {
-      console.log('all completed ');
-    }
-  }, [todos]);
-
-  const loadTodos = async () => {
-    try {
-      const storedTodos = await AsyncStorage.getItem('todos');
-      if (storedTodos) {
-        setTodos(JSON.parse(storedTodos));
-      }
-    } catch (error) {
-      console.error('Error loading todos:', error);
-    }
-  };
-
-  const saveTodos = async () => {
-    try {
-      await AsyncStorage.setItem('todos', JSON.stringify(todos));
-    } catch (error) {
-      console.error('Error saving todos:', error);
-    }
-  };
-
   const handleTodoClick = () => {
+    setSelectedTodo(null);
     setIsTodoOpen(true);
   };
 
@@ -100,6 +61,8 @@ export default function Index() {
   if (redirecting) {
     return <Loading />;
   }
+
+  const areGoalsCompleted = todos.every(todo => todo.completed);
 
   return (
     <View
@@ -192,6 +155,7 @@ export default function Index() {
                     justifyContent: 'center', // To center the inner checkmark
                     marginTop: 10,
                   }}
+                  disabled={areGoalsCompleted}
                 >
                   {todo.completed && (
                     <View
@@ -231,7 +195,6 @@ export default function Index() {
       {isTodoOpen ? (
         <TodoMaker
           setIsTodoOpen={setIsTodoOpen}
-          setTodos={setTodos}
           todoToEdit={selectedTodo}
           setSelectedTodo={setSelectedTodo}
           isOpen={isTodoOpen}
@@ -241,8 +204,6 @@ export default function Index() {
         <TodoEditor
           setIsTodoOpen={setIsTodoOpen}
           setIsEditOpen={setIsEditOpen}
-          setTodos={setTodos}
-          todos={todos}
           setSelectedTodo={setSelectedTodo}
           isOpen={isEditOpen}
           handleClose={handleClose}

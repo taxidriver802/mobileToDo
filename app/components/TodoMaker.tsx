@@ -15,10 +15,10 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
+import { useTodos } from '../context/TodoContextProvider';
 
 interface TodoMakerProps {
   setIsTodoOpen: (isOpen: boolean) => void;
-  setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   todoToEdit?: Todo | null;
   setSelectedTodo?: React.Dispatch<React.SetStateAction<Todo | null>>;
   isOpen: boolean;
@@ -85,13 +85,12 @@ const FloatingLabelInput = ({
 };
 
 const TodoMaker = ({
-  setIsTodoOpen,
-  setTodos,
   todoToEdit,
   handleClose,
   setSelectedTodo,
 }: TodoMakerProps) => {
   const { colors } = useTheme();
+  const { todos, setTodos } = useTodos();
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
 
@@ -136,7 +135,7 @@ const TodoMaker = ({
                 description: description.trim(),
                 completed: false,
                 id: t.id,
-                lastUpdated: new Date().toISOString(),
+                lastUpdated: new Date().toDateString(),
               }
             : t
         )
@@ -147,7 +146,6 @@ const TodoMaker = ({
         title: title.trim(),
         description: description.trim(),
         id: nanoid(),
-        lastUpdated: new Date().toISOString(),
         completed: false,
       };
       setTodos(prev => [...prev, newTodo]);

@@ -12,15 +12,14 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
+import { useTodos } from '../context/TodoContextProvider';
 // We no longer need to import TodoMaker here
 
 interface TodoEditorProps {
   isOpen: boolean;
   setIsEditOpen: (isOpen: boolean) => void;
   setIsTodoOpen: (isOpen: boolean) => void;
-  setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
-  todos: Todo[];
-  // This prop is the key to the solution
+
   setSelectedTodo: (todo: Todo | null) => void;
   handleClose?: () => void;
 }
@@ -28,16 +27,11 @@ interface TodoEditorProps {
 const TodoEditor = ({
   setIsTodoOpen,
   setIsEditOpen,
-  setTodos,
-  todos,
-  // --- CHANGE 1: Destructure the setSelectedTodo prop ---
   setSelectedTodo,
   handleClose,
 }: TodoEditorProps) => {
   const { colors } = useTheme();
-
-  // --- CHANGE 2: Remove the local selectedTodo state entirely ---
-  // const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
+  const { todos, setTodos } = useTodos();
 
   const handleDelete = (id: string) => {
     setTodos(prev => prev.filter(t => t.id !== id));
