@@ -31,10 +31,6 @@ export default function Profile() {
         </Text>
       </View>
 
-      <WeekTracker
-        completedDays={[false, false, false, false, false, false, false]}
-      />
-
       <TouchableOpacity
         style={[
           styles.button,
@@ -56,6 +52,7 @@ export default function Profile() {
         <Text style={[styles.content, { color: colors.text }]}>
           Your Streak: {streak}
         </Text>
+        <WeekTracker />
       </View>
 
       {isSettingsOpen && <Settings setIsSettingsOpen={setIsSettingsOpen} />}
@@ -94,7 +91,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)', // optional dark overlay
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
