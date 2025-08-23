@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useTodos } from '../context/TodoContextProvider';
+import { useTodos } from '../../context/TodoContextProvider';
 
 type WeekTrackerProps = {};
 

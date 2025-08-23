@@ -1,7 +1,7 @@
 import useTheme from '@/hooks/useTheme';
 import React, { useRef } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
-import { useTodos } from '../context/TodoContextProvider';
+import { useTodos } from '../../context/TodoContextProvider';
 
 import type { Todo } from '../(tabs)/index';
 

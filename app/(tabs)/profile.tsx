@@ -1,16 +1,30 @@
 import useTheme from '@/hooks/useTheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeContext } from '../../context/ThemeContextProvider';
+import { useTodos } from '../../context/TodoContextProvider';
+import Loading from '../components/loading';
 import Settings from '../components/Settings';
 import WeekTracker from '../components/tracker';
-import { useTodos } from '../context/TodoContextProvider';
+
+const profilePic = require('../../assets/images/profilePhoto.jpg');
 
 export default function Profile() {
   const { colors } = useTheme();
+  const { isLoading } = useThemeContext();
   const { streak } = useTodos();
 
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  const [useUserName, setUseUserName] = React.useState(false);
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  const userName = 'JAcox12';
+  const firstName = 'Jason';
+  const lastName = 'Cox';
 
   return (
     <View
@@ -29,6 +43,20 @@ export default function Profile() {
         >
           Profile
         </Text>
+        <View style={{ marginTop: 50 }}>
+          <Image
+            source={profilePic}
+            style={{
+              width: 200,
+              height: 200,
+              borderRadius: 100,
+              alignSelf: 'center',
+            }}
+          />
+          <Text style={[styles.title, { color: colors.text }]}>
+            {useUserName ? userName : `${firstName} ${lastName}`}
+          </Text>
+        </View>
       </View>
 
       <TouchableOpacity
@@ -37,14 +65,14 @@ export default function Profile() {
           {
             backgroundColor: colors.primary,
             position: 'absolute',
-            top: 50,
+            top: 60,
             right: 25,
           },
         ]}
         onPress={() => setIsSettingsOpen(true)}
       >
-        <Text style={styles.buttonText}>
-          <Ionicons name="settings" size={15} color={colors.surface} />
+        <Text>
+          <Ionicons name="options" size={15} color={colors.surface} />
         </Text>
       </TouchableOpacity>
 
@@ -55,7 +83,13 @@ export default function Profile() {
         <WeekTracker />
       </View>
 
-      {isSettingsOpen && <Settings setIsSettingsOpen={setIsSettingsOpen} />}
+      {isSettingsOpen && (
+        <Settings
+          setIsSettingsOpen={setIsSettingsOpen}
+          useUserName={useUserName}
+          setUseUserName={setUseUserName}
+        />
+      )}
     </View>
   );
 }
@@ -96,8 +130,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
     elevation: 2,
     shadowColor: '#000',

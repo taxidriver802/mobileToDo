@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
-import { useTodos } from '../context/TodoContextProvider';
+import { useTodos } from '../../context/TodoContextProvider';
 
 interface TodoMakerProps {
   setIsTodoOpen: (isOpen: boolean) => void;

@@ -1,13 +1,22 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useThemeContext } from '../../context/ThemeContextProvider';
 
 type SettingsProps = {
   setIsSettingsOpen: (open: boolean) => void;
+  setUseUserName: (open: boolean) => void;
+  useUserName: boolean;
 };
 
-const Settings: React.FC<SettingsProps> = ({ setIsSettingsOpen }) => {
+const Settings: React.FC<SettingsProps> = ({
+  setIsSettingsOpen,
+  setUseUserName,
+  useUserName,
+}) => {
   const { toggleDarkMode, colors } = useTheme();
+  const { isDarkMode } = useThemeContext();
+
   return (
     <Modal transparent>
       <View style={styles.modalOverlay}>
@@ -30,7 +39,18 @@ const Settings: React.FC<SettingsProps> = ({ setIsSettingsOpen }) => {
             onPress={toggleDarkMode}
           >
             <Text style={[styles.buttonText, { color: colors.surface }]}>
-              Toggle Dark Mode
+              {isDarkMode ? 'Toggle Light Mode' : 'Toggle Dark Mode'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              { backgroundColor: colors.primary, marginTop: 10 },
+            ]}
+            onPress={() => setUseUserName(!useUserName)}
+          >
+            <Text style={[styles.buttonText, { color: colors.surface }]}>
+              Toggle profile name
             </Text>
           </TouchableOpacity>
         </View>

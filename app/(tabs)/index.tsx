@@ -2,7 +2,7 @@ import useTheme from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 
-import { useTodos } from '../context/TodoContextProvider';
+import { useTodos } from '../../context/TodoContextProvider';
 
 import {
   ScrollView,
@@ -187,7 +187,7 @@ export default function Index() {
             onPress={handleTodoEdit}
           >
             <Text style={[styles.buttonText, { color: colors.surface }]}>
-              Edit Todo
+              Edit Goal
             </Text>
           </TouchableOpacity>
         )}

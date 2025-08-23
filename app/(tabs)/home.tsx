@@ -4,8 +4,8 @@ import LottieView from 'lottie-react-native';
 import React, { useCallback, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
+import { useTodos } from '../../context/TodoContextProvider';
 import TodoCard from '../components/TodoCard';
-import { useTodos } from '../context/TodoContextProvider';
 
 import { motivationalMessages } from '../../utils/utils';
 
@@ -91,7 +91,7 @@ export default function Home() {
           ) : (
             <View style={{ marginVertical: 150 }}>
               <Text style={[styles.description, { color: colors.text }]}>
-                You've completed all of your todos today!
+                You've completed all of your goals today!
               </Text>
               <Text
                 style={[

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
-import { useTodos } from '../context/TodoContextProvider';
+import { useTodos } from '../../context/TodoContextProvider';
 // We no longer need to import TodoMaker here
 
 interface TodoEditorProps {
