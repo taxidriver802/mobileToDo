@@ -1,50 +1,81 @@
-# Welcome to your Expo app 👋
+# 📱 Daily Goals App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A simple mobile app to help you stay productive by setting daily goals and checking them off.  
+Each day your goals reset so you can come back, complete them again, and build streaks over time.
 
-## Get started
+---
 
-1. Install dependencies
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (>= 16)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+
+### Installation
+
+1. Clone the repo:
+
+   ```bash
+   git clone https://github.com/taxidriver802/mobileTodo.git
+   cd MobileTodo
+   ```
+
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. Start the project:
 
    ```bash
    npx expo start
+   or
+   npx expo start --tunnel
    ```
 
-In the output, you'll find options to open the app in a
+4. Open the app:
+   - Scan the QR code with the Expo Go app (iOS/Android)
+   - Or run in emulator (`iOS Simulator` / `Android Studio`)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📸 Screenshots
 
-## Get a fresh project
+<table>
+  <tr>
+    <td><img src="assets/images/IMG_0503.PNG" width="300" /></td>
+    <td><img src="assets/images/IMG_0504.PNG" width="300" /></td>
+  </tr>
+</table>
 
-When you're ready, run:
+---
 
-```bash
-npm run reset-project
-```
+## 📈 Roadmap
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- [ ] Notifications / reminders
+- [ ] Cloud sync & login
+- [ ] Categories & tags for tasks
+- [x] Dark mode toggle
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🤝 Contributing
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Contributions are welcome! Feel free to fork the repo and submit a pull request.
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## 📄 License
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project is licensed under the MIT License.
+
+---
+
+## 👤 Author
+
+**Jason Cox**
+
+- GitHub: [@taxidriver802](https://github.com/taxidriver802)
+- Portfolio: [taxidriver802.github.io/portfolio](https://taxidriver802.github.io/portfolio)

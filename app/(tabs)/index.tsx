@@ -1,9 +1,8 @@
 import useTheme from '@/hooks/useTheme';
+import { useRouter } from 'expo-router';
 import React from 'react';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { useTodos } from '../context/TodoContextProvider';
+import { useTodos } from '../../context/TodoContextProvider';
 
 import {
   ScrollView,
@@ -13,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import Loading from '../components/loading';
 import TodoEditor from '../components/TodoEditor';
 import TodoMaker from '../components/TodoMaker';
 
@@ -28,64 +28,56 @@ export default function Index() {
   const [isTodoOpen, setIsTodoOpen] = React.useState(false);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
+  const [redirecting, setRedirecting] = React.useState(true);
 
   const { todos, setTodos } = useTodos();
 
-  /*  const [selectedTodoId, setSelectedTodoId] = React.useState<number | null>(
-    null
-  ); */
+  const router = useRouter();
 
   React.useEffect(() => {
-    loadTodos();
+    const timer = setTimeout(() => {
+      router.replace('/home');
+      setRedirecting(false);
+    }, 250);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  React.useEffect(() => {
-    saveTodos();
-  }, [todos]);
-
-  const loadTodos = async () => {
-    try {
-      const storedTodos = await AsyncStorage.getItem('todos');
-      if (storedTodos) {
-        setTodos(JSON.parse(storedTodos));
-      }
-    } catch (error) {
-      console.error('Error loading todos:', error);
-    }
-  };
-
-  const saveTodos = async () => {
-    try {
-      await AsyncStorage.setItem('todos', JSON.stringify(todos));
-    } catch (error) {
-      console.error('Error saving todos:', error);
-    }
-  };
-
   const handleTodoClick = () => {
-    /* setIsEditOpen(false); */
+    setSelectedTodo(null);
     setIsTodoOpen(true);
   };
 
   const handleTodoEdit = () => {
-    /* setIsTodoOpen(false); */
     setIsEditOpen(true);
   };
 
   const handleClose = () => {
     setIsEditOpen(false);
     setIsTodoOpen(false);
+    setSelectedTodo(null);
   };
+
+  if (redirecting) {
+    return <Loading />;
+  }
+
+  const areGoalsCompleted = todos.every(todo => todo.completed);
 
   return (
     <View
       style={[styles.container, styles.main, { backgroundColor: colors.bg }]}
     >
-      <View>
+      <View style={{ width: '100%' }}>
         <Text
-          style={[styles.content, { color: colors.text }, { marginTop: 10 }]}
+          style={[
+            styles.content,
+            styles.todayTitle,
+            { color: colors.text },
+            { marginTop: 30, fontSize: 27 },
+          ]}
         >
-          Your Todos
+          Your Goals
         </Text>
       </View>
 
@@ -96,7 +88,7 @@ export default function Index() {
         >
           {todos.length === 0 && (
             <Text style={[styles.content, { color: colors.text }]}>
-              Click "+ Add Todo" below
+              Click "+ Add Goal" below
             </Text>
           )}
           {todos.length > 0 &&
@@ -119,14 +111,14 @@ export default function Index() {
                   },
                 ]}
               >
-                <View>
+                <View style={{ justifyContent: 'center' }}>
                   <Text
                     style={{
                       color: colors.text,
                       fontSize: 18,
                       fontWeight: 'bold',
                       marginBottom: 4,
-                      width: 225,
+                      width: 235,
                     }}
                   >
                     {todo.title}
@@ -146,7 +138,6 @@ export default function Index() {
                 </View>
                 <TouchableOpacity
                   onPress={() => {
-                    // Toggle completion for this todo
                     setTodos(prev =>
                       prev.map((t, i) =>
                         i === idx ? { ...t, completed: !t.completed } : t
@@ -154,33 +145,28 @@ export default function Index() {
                     );
                   }}
                   style={{
-                    alignSelf: 'flex-start',
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    borderWidth: 2,
+                    borderColor: todo.completed ? 'green' : colors.text,
+                    backgroundColor: todo.completed ? 'green' : 'transparent',
+                    alignItems: 'center', // To center the inner checkmark
+                    justifyContent: 'center', // To center the inner checkmark
                     marginTop: 10,
                   }}
+                  disabled={areGoalsCompleted}
                 >
-                  <View
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 14,
-                      borderWidth: 2,
-                      borderColor: todo.completed ? 'green' : colors.text,
-                      backgroundColor: todo.completed ? 'green' : 'transparent',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {todo.completed && (
-                      <View
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: 6,
-                          backgroundColor: '#fff',
-                        }}
-                      />
-                    )}
-                  </View>
+                  {todo.completed && (
+                    <View
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 6,
+                        backgroundColor: '#fff',
+                      }}
+                    />
+                  )}
                 </TouchableOpacity>
               </View>
             ))}
@@ -192,7 +178,7 @@ export default function Index() {
           onPress={handleTodoClick}
         >
           <Text style={[styles.buttonText, { color: colors.surface }]}>
-            + Add Todo
+            + Add Goal
           </Text>
         </TouchableOpacity>
         {todos.length > 0 && (
@@ -201,32 +187,27 @@ export default function Index() {
             onPress={handleTodoEdit}
           >
             <Text style={[styles.buttonText, { color: colors.surface }]}>
-              Edit Todo
+              Edit Goal
             </Text>
           </TouchableOpacity>
         )}
       </View>
-      {isTodoOpen || isEditOpen ? (
-        isTodoOpen ? (
-          <TodoMaker
-            setIsTodoOpen={setIsTodoOpen}
-            setTodos={setTodos}
-            setIsEditOpen={setIsEditOpen}
-            isOpen={isTodoOpen}
-            handleClose={handleClose}
-          />
-        ) : (
-          <TodoEditor
-            setIsTodoOpen={setIsTodoOpen}
-            setIsEditOpen={setIsEditOpen}
-            isTodoOpen={isTodoOpen}
-            setTodos={setTodos}
-            todos={todos}
-            setSelectedTodo={setSelectedTodo}
-            isOpen={isTodoOpen}
-            handleClose={handleClose}
-          />
-        )
+      {isTodoOpen ? (
+        <TodoMaker
+          setIsTodoOpen={setIsTodoOpen}
+          todoToEdit={selectedTodo}
+          setSelectedTodo={setSelectedTodo}
+          isOpen={isTodoOpen}
+          handleClose={handleClose}
+        />
+      ) : isEditOpen ? (
+        <TodoEditor
+          setIsTodoOpen={setIsTodoOpen}
+          setIsEditOpen={setIsEditOpen}
+          setSelectedTodo={setSelectedTodo}
+          isOpen={isEditOpen}
+          handleClose={handleClose}
+        />
       ) : null}
     </View>
   );
@@ -237,7 +218,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
   },
   todosWrapper: {
-    height: 400,
+    height: 500,
     width: 300,
   },
   todosScrollView: {
@@ -287,5 +268,10 @@ const styles = StyleSheet.create({
   todoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  todayTitle: {
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
+    width: '100%',
   },
 });

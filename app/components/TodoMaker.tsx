@@ -15,12 +15,12 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
+import { useTodos } from '../../context/TodoContextProvider';
 
 interface TodoMakerProps {
   setIsTodoOpen: (isOpen: boolean) => void;
-  setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
-  todoToEdit?: Todo;
-  setIsEditOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  todoToEdit?: Todo | null;
+  setSelectedTodo?: React.Dispatch<React.SetStateAction<Todo | null>>;
   isOpen: boolean;
   handleClose?: () => void;
 }
@@ -85,13 +85,12 @@ const FloatingLabelInput = ({
 };
 
 const TodoMaker = ({
-  setIsTodoOpen,
-  setTodos,
   todoToEdit,
-  setIsEditOpen,
   handleClose,
+  setSelectedTodo,
 }: TodoMakerProps) => {
   const { colors } = useTheme();
+  const { todos, setTodos } = useTodos();
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
 
@@ -113,7 +112,7 @@ const TodoMaker = ({
         [{ text: 'Close', style: 'cancel' }],
         { cancelable: true }
       );
-      return; // stop execution here if needed
+      return;
     }
 
     if (!title.trim()) {
@@ -130,22 +129,31 @@ const TodoMaker = ({
       setTodos(prev =>
         prev.map(t =>
           t.id === todoToEdit.id
-            ? { ...t, title: title.trim(), description: description.trim() }
+            ? {
+                ...t,
+                title: title.trim(),
+                description: description.trim(),
+                completed: false,
+                id: t.id,
+                lastUpdated: new Date().toDateString(),
+              }
             : t
         )
       );
+      setSelectedTodo?.(null);
     } else {
       const newTodo: Todo = {
         title: title.trim(),
         description: description.trim(),
         id: nanoid(),
+        completed: false,
       };
       setTodos(prev => [...prev, newTodo]);
     }
 
     setTitle('');
     setDescription('');
-    setIsTodoOpen(false);
+    handleClose?.();
   };
 
   return (
@@ -154,7 +162,7 @@ const TodoMaker = ({
         <View style={styles.modalOverlay}>
           <View style={[styles.container, { backgroundColor: colors.surface }]}>
             <Text style={[styles.title, { color: colors.text }]}>
-              Add a todo
+              {todoToEdit ? 'Edit goal' : 'Add a goal'}
             </Text>
 
             <TouchableOpacity

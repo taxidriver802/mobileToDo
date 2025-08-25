@@ -12,15 +12,14 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
-import TodoMaker from './TodoMaker';
+import { useTodos } from '../../context/TodoContextProvider';
+// We no longer need to import TodoMaker here
 
 interface TodoEditorProps {
   isOpen: boolean;
   setIsEditOpen: (isOpen: boolean) => void;
   setIsTodoOpen: (isOpen: boolean) => void;
-  isTodoOpen: boolean;
-  setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
-  todos: Todo[];
+
   setSelectedTodo: (todo: Todo | null) => void;
   handleClose?: () => void;
 }
@@ -28,14 +27,11 @@ interface TodoEditorProps {
 const TodoEditor = ({
   setIsTodoOpen,
   setIsEditOpen,
-  isTodoOpen,
-  setTodos,
-  todos,
-  isOpen,
+  setSelectedTodo,
   handleClose,
 }: TodoEditorProps) => {
   const { colors } = useTheme();
-  const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
+  const { todos, setTodos } = useTodos();
 
   const handleDelete = (id: string) => {
     setTodos(prev => prev.filter(t => t.id !== id));
@@ -55,14 +51,13 @@ const TodoEditor = ({
 
   const handleEdit = (todo: Todo) => {
     setSelectedTodo(todo);
-    setIsEditOpen(false); // close editor
-    setIsTodoOpen(true); // open TodoMaker
+    setIsEditOpen(false);
+    setIsTodoOpen(true);
   };
 
   return (
     <Modal transparent>
       <View style={styles.modalOverlay}>
-        {/* Inner container */}
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <Text
             style={[
@@ -70,7 +65,7 @@ const TodoEditor = ({
               { color: colors.text, alignSelf: 'center', marginBottom: 5 },
             ]}
           >
-            Edit your todos
+            Edit your goals
           </Text>
 
           <TouchableOpacity
@@ -91,7 +86,7 @@ const TodoEditor = ({
               <TouchableOpacity
                 key={todo.id}
                 style={styles.todoDelContainer}
-                onPress={() => handleEdit(todo)}
+                onPress={() => handleEdit(todo)} // This now works correctly
                 activeOpacity={0.7}
               >
                 <Text
@@ -111,7 +106,6 @@ const TodoEditor = ({
                     name="trash-outline"
                     size={24}
                     color={colors.text}
-                    opacity={0.25}
                   />
                 </TouchableOpacity>
               </TouchableOpacity>
@@ -119,16 +113,6 @@ const TodoEditor = ({
           </ScrollView>
         </View>
       </View>
-
-      {/* Open the TodoMaker if a todo is selected */}
-      {isTodoOpen && selectedTodo && (
-        <TodoMaker
-          setIsTodoOpen={setIsTodoOpen}
-          setTodos={setTodos}
-          todoToEdit={selectedTodo}
-          isOpen={isTodoOpen}
-        />
-      )}
     </Modal>
   );
 };
