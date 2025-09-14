@@ -1,12 +1,23 @@
 import useTheme from '@/hooks/useTheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useThemeContext } from '../../context/ThemeContextProvider';
 import { useTodos } from '../../context/TodoContextProvider';
 import Loading from '../components/loading';
 import Settings from '../components/Settings';
 import WeekTracker from '../components/tracker';
+import AuthRegister from '../components/authRegister';
+import AuthLogin from '../components/authLogin';
+import { useAuth } from '@/context/AuthContextProvider';
+import { useUIStore } from '@/store/uiStore';
 
 const profilePic = require('../../assets/images/profilePhoto.jpg');
 
@@ -15,16 +26,30 @@ export default function Profile() {
   const { isLoading } = useThemeContext();
   const { streak } = useTodos();
 
-  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-  const [useUserName, setUseUserName] = React.useState(false);
+  const { isLogin, setIsLogin } = useAuth();
 
-  if (isLoading) {
+  const {
+    isSettingsOpen,
+    setIsSettingsOpen,
+    isFriendsOpen,
+    setIsFriendsOpen,
+    isLoginOpen,
+    setIsLoginOpen,
+    useUserName,
+    setUseUserName,
+  } = useUIStore();
+
+  if (isLoading && isLogin === false) {
     return <Loading />;
   }
 
   const userName = 'JAcox12';
   const firstName = 'Jason';
   const lastName = 'Cox';
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
 
   return (
     <View
@@ -44,20 +69,52 @@ export default function Profile() {
           Profile
         </Text>
         <View style={{ marginTop: 50 }}>
-          <Image
-            source={profilePic}
-            style={{
-              width: 200,
-              height: 200,
-              borderRadius: 100,
-              alignSelf: 'center',
-            }}
-          />
+          {isLogin ? (
+            <Image
+              source={profilePic}
+              style={{
+                width: 200,
+                height: 200,
+                borderRadius: 100,
+                alignSelf: 'center',
+              }}
+            />
+          ) : (
+            <Ionicons
+              name="person-circle-outline"
+              size={200}
+              color={colors.text}
+              style={{
+                alignSelf: 'center',
+              }}
+            />
+          )}
           <Text style={[styles.title, { color: colors.text }]}>
-            {useUserName ? userName : `${firstName} ${lastName}`}
+            {isLogin
+              ? useUserName
+                ? userName
+                : `${firstName} ${lastName}`
+              : null}
           </Text>
         </View>
       </View>
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          {
+            backgroundColor: colors.primary,
+            position: 'absolute',
+            top: 60,
+            left: 25,
+          },
+        ]}
+        onPress={() => setIsFriendsOpen(true)}
+      >
+        <Text>
+          <Ionicons name="people" size={15} color={colors.surface} />
+        </Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[
@@ -76,18 +133,50 @@ export default function Profile() {
         </Text>
       </TouchableOpacity>
 
-      <View>
-        <Text style={[styles.content, { color: colors.text }]}>
-          Your Streak: {streak}
-        </Text>
-        <WeekTracker />
-      </View>
+      {isLogin && (
+        <View>
+          <Text style={[styles.content, { color: colors.text }]}>
+            Your Streak: {streak}
+          </Text>
+          <WeekTracker />
+        </View>
+      )}
+
+      {!isLogin && (
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.primary }]}
+          onPress={() => setIsFriendsOpen(true)}
+        >
+          <Text style={[styles.buttonText, { color: colors.surface }]}>
+            Register
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {isSettingsOpen && (
         <Settings
           setIsSettingsOpen={setIsSettingsOpen}
           useUserName={useUserName}
           setUseUserName={setUseUserName}
+          setIsLoginOpen={setIsLoginOpen}
+        />
+      )}
+
+      {isFriendsOpen && (
+        <AuthRegister
+          setIsFriendsOpen={setIsFriendsOpen}
+          setIsLoginOpen={setIsLoginOpen}
+          setIsLogin={setIsLogin}
+          dismissKeyboard={dismissKeyboard}
+        />
+      )}
+
+      {isLoginOpen && (
+        <AuthLogin
+          setIsFriendsOpen={setIsFriendsOpen}
+          setIsLoginOpen={setIsLoginOpen}
+          setIsLogin={setIsLogin}
+          dismissKeyboard={dismissKeyboard}
         />
       )}
     </View>

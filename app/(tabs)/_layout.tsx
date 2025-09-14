@@ -5,18 +5,21 @@ import React, { useState } from 'react';
 
 import { ThemeProvider } from '../../context/ThemeContextProvider';
 import { TodosProvider } from '../../context/TodoContextProvider';
+import { useAuth } from '../../context/AuthContextProvider';
 
 import type { Todo } from './index';
 
 const TabsLayout = () => {
   const { colors } = useTheme();
+  const { isLogin } = useAuth();
   const [todos, setTodos] = useState<Todo[]>([]);
+
+  console.log('isLogin:', isLogin);
 
   return (
     <ThemeProvider>
       <TodosProvider>
         <Tabs
-          initialRouteName="home"
           screenOptions={{
             tabBarActiveTintColor: colors.primary,
             tabBarInactiveTintColor: colors.textMuted,
@@ -42,6 +45,8 @@ const TabsLayout = () => {
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="flash-outline" size={size} color={color} />
               ),
+              // Hide Goals tab if not logged in
+              href: isLogin ? './' : undefined,
             }}
             initialParams={{ todos }}
           />
@@ -53,15 +58,22 @@ const TabsLayout = () => {
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="home" size={size} color={color} />
               ),
+              // Hide Home tab if not logged in
+              href: isLogin ? '/home' : null,
             }}
             initialParams={{ todos }}
           />
+
           <Tabs.Screen
             name="profile"
             options={{
-              title: 'Profile',
+              title: isLogin ? 'Profile' : 'Login',
               tabBarIcon: ({ color, size }) => (
-                <Ionicons name="person" size={size} color={color} />
+                <Ionicons
+                  name={isLogin ? 'person' : 'log-in'}
+                  size={size}
+                  color={color}
+                />
               ),
             }}
           />

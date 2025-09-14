@@ -2,16 +2,58 @@ import useTheme from '@/hooks/useTheme';
 import { useFocusEffect } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import React, { useCallback, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Keyboard,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { ProgressBar } from 'react-native-paper';
 import { useTodos } from '../../context/TodoContextProvider';
+import { useAuth } from '@/context/AuthContextProvider';
 import TodoCard from '../components/TodoCard';
 
 import { motivationalMessages } from '../../utils/utils';
+import Loading from '../components/loading';
+import AuthRegister from '../components/authRegister';
+import { useUIStore } from '@/store/uiStore';
+import AuthLogin from '../components/authLogin';
 
 export default function Home() {
   const { colors } = useTheme();
   const { todos } = useTodos();
+  const { isLogin, setIsLogin } = useAuth();
+
+  const { setIsFriendsOpen, setIsLoginOpen, isLoginOpen } = useUIStore();
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
+  if (isLogin === false) {
+    return (
+      <>
+        <Loading />
+        {isLoginOpen ? (
+          <AuthLogin
+            setIsFriendsOpen={setIsFriendsOpen}
+            setIsLogin={setIsLogin}
+            dismissKeyboard={dismissKeyboard}
+            setIsLoginOpen={setIsLoginOpen}
+          />
+        ) : (
+          <AuthRegister
+            setIsFriendsOpen={setIsFriendsOpen}
+            setIsLogin={setIsLogin}
+            dismissKeyboard={dismissKeyboard}
+            setIsLoginOpen={setIsLoginOpen}
+          />
+        )}
+      </>
+    );
+  }
 
   const completedTodos = todos.filter(t => t.completed).length;
   const totalTodos = todos.length;
@@ -142,7 +184,7 @@ export default function Home() {
             { color: colors.text, opacity: 0.5, marginTop: 'auto' },
           ]}
         >
-          Click <Text style={{ fontStyle: 'italic' }}>Goals</Text> to create
+          Press <Text style={{ fontStyle: 'italic' }}>Goals</Text> to create
           {'\n'}
           your first daily goal
         </Text>

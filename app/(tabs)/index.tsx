@@ -88,7 +88,7 @@ export default function Index() {
         >
           {todos.length === 0 && (
             <Text style={[styles.content, { color: colors.text }]}>
-              Click "+ Add Goal" below
+              Press "+ Add Goal" below
             </Text>
           )}
           {todos.length > 0 &&

@@ -55,7 +55,7 @@ Each day your goals reset so you can come back, complete them again, and build s
 ## 📈 Roadmap
 
 - [ ] Notifications / reminders
-- [ ] Cloud sync & login
+- [ ] Cloud sync &
 - [ ] Categories & tags for tasks
 - [x] Dark mode toggle
 

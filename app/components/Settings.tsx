@@ -2,20 +2,25 @@ import useTheme from '@/hooks/useTheme';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeContext } from '../../context/ThemeContextProvider';
+import { useAuth } from '@/context/AuthContextProvider';
 
 type SettingsProps = {
   setIsSettingsOpen: (open: boolean) => void;
   setUseUserName: (open: boolean) => void;
   useUserName: boolean;
+  setIsLoginOpen: (open: boolean) => void;
 };
 
 const Settings: React.FC<SettingsProps> = ({
   setIsSettingsOpen,
   setUseUserName,
   useUserName,
+  setIsLoginOpen,
 }) => {
   const { toggleDarkMode, colors } = useTheme();
   const { isDarkMode } = useThemeContext();
+
+  const { logout, setIsLogin, isLogin } = useAuth();
 
   return (
     <Modal transparent>
@@ -42,17 +47,37 @@ const Settings: React.FC<SettingsProps> = ({
               {isDarkMode ? 'Toggle Light Mode' : 'Toggle Dark Mode'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: colors.primary, marginTop: 10 },
-            ]}
-            onPress={() => setUseUserName(!useUserName)}
-          >
-            <Text style={[styles.buttonText, { color: colors.surface }]}>
-              Toggle profile name
-            </Text>
-          </TouchableOpacity>
+
+          {isLogin ? (
+            <>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  { backgroundColor: colors.primary, marginTop: 10 },
+                ]}
+                onPress={() => setUseUserName(!useUserName)}
+              >
+                <Text style={[styles.buttonText, { color: colors.surface }]}>
+                  Toggle profile name
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  { backgroundColor: colors.primary, marginTop: 10 },
+                ]}
+                onPress={() => {
+                  logout();
+                  setIsLogin(false);
+                  setIsSettingsOpen(false);
+                  setIsLoginOpen(true);
+                }}
+              >
+                <Text style={[styles.buttonText, styles.logout]}>Logout</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -101,6 +126,9 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
   close: { width: 25, position: 'absolute', top: 5, right: 5, borderRadius: 7 },
+  logout: {
+    color: 'red',
+  },
 });
 
 export default Settings;

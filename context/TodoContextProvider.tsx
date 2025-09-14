@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import Toast from 'react-native-toast-message';
 
+import { useAuth } from '@/context/AuthContextProvider';
+
 // Simplified Todo type is better, but keeping yours to match existing data
 export type Todo = {
   id: string;
@@ -31,9 +33,18 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   const [completionHistory, setCompletionHistory] = useState<CompletionHistory>(
     {}
   );
+  const { isLogin } = useAuth();
 
-  // --- EFFECT 1: Handles initial loading and the daily reset check ---
+  // Only run effects if logged in
   React.useEffect(() => {
+    if (!isLogin) {
+      setTodos([]);
+      setStreak(0);
+      setCompletionHistory({});
+      setIsLoading(false);
+      return;
+    }
+
     const initializeAndCheckDailyReset = async () => {
       const today = new Date().toDateString();
       const storedTodos = await AsyncStorage.getItem('todos');
@@ -42,15 +53,12 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       const storedHistory = await AsyncStorage.getItem('completionHistory');
       const initialTodos: Todo[] = storedTodos ? JSON.parse(storedTodos) : [];
 
-      if (storedStreak) {
-        setStreak(parseInt(storedStreak, 10));
-      }
+      if (storedStreak) setStreak(parseInt(storedStreak, 10));
       if (storedHistory) setCompletionHistory(JSON.parse(storedHistory));
 
       if (lastCheckDate !== today && initialTodos.length > 0) {
         const allWereCompleted = initialTodos.every(todo => todo.completed);
 
-        // Record the result of the PREVIOUS day before resetting
         const newHistory = {
           ...completionHistory,
           [lastCheckDate!]: allWereCompleted,
@@ -64,7 +72,6 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
         if (!allWereCompleted) {
           setStreak(0);
           await AsyncStorage.setItem('streak', '0');
-
           Toast.show({
             type: 'error',
             text1: 'Oh no! Your streak was lost!',
@@ -72,6 +79,7 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
             position: 'bottom',
           });
         }
+
         const resetTodos = initialTodos.map(todo => ({
           ...todo,
           completed: false,
@@ -85,25 +93,25 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
     };
 
     initializeAndCheckDailyReset();
-  }, []); // Runs only once
+  }, [isLogin]);
 
-  // --- EFFECT 2: Persists the todos to storage whenever they change ---
+  // Save todos only if logged in
   React.useEffect(() => {
+    if (!isLogin || isLoading) return;
+
     const saveTodos = async () => {
-      if (!isLoading) {
-        try {
-          await AsyncStorage.setItem('todos', JSON.stringify(todos));
-        } catch (error) {
-          console.error('Error saving todos:', error);
-        }
+      try {
+        await AsyncStorage.setItem('todos', JSON.stringify(todos));
+      } catch (error) {
+        console.error('Error saving todos:', error);
       }
     };
     saveTodos();
-  }, [todos, isLoading]); // Saves whenever todos change
+  }, [todos, isLogin, isLoading]);
 
-  // --- EFFECT 3: Handles increasing the streak when all todos are completed ---
+  // Handle streak only if logged in
   React.useEffect(() => {
-    if (isLoading || todos.length === 0) return;
+    if (!isLogin || isLoading || todos.length === 0) return;
     const allCompleted = todos.every(todo => todo.completed);
     if (!allCompleted) return;
 
@@ -118,11 +126,11 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
         await AsyncStorage.setItem('streak', newStreak.toString());
         await AsyncStorage.setItem('streakIncreasedForDate', today);
         Toast.show({
-          type: 'success', // 'success', 'error', 'info'
+          type: 'success',
           text1: 'Streak Increased!',
           text2: `You're now on a ${newStreak} day streak! 🎉`,
           position: 'bottom',
-          visibilityTime: 3000, // 3 seconds
+          visibilityTime: 3000,
         });
       } else {
         Toast.show({
@@ -134,7 +142,7 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     checkAndIncreaseStreak();
-  }, [todos, isLoading]);
+  }, [todos, streak, isLogin, isLoading]);
 
   return (
     <TodosContext.Provider
