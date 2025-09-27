@@ -7,23 +7,17 @@ type UIStore = {
   isFriendsOpen: boolean;
   setIsFriendsOpen: (open: boolean) => void;
 
-  isLoginOpen: boolean;
-  setIsLoginOpen: (open: boolean) => void;
-
   useUserName: boolean;
   setUseUserName: (value: boolean) => void;
 };
 
-export const useUIStore = create<UIStore>((set) => ({
+export const useUIStore = create<UIStore>(set => ({
   isSettingsOpen: false,
-  setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
+  setIsSettingsOpen: open => set({ isSettingsOpen: open }),
 
   isFriendsOpen: false,
-  setIsFriendsOpen: (open) => set({ isFriendsOpen: open }),
-
-  isLoginOpen: false,
-  setIsLoginOpen: (open) => set({ isLoginOpen: open }),
+  setIsFriendsOpen: open => set({ isFriendsOpen: open }),
 
   useUserName: false,
-  setUseUserName: (value) => set({ useUserName: value }),
+  setUseUserName: value => set({ useUserName: value }),
 }));

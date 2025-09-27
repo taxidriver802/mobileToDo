@@ -2,64 +2,24 @@ import useTheme from '@/hooks/useTheme';
 import { useFocusEffect } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
 import React, { useCallback, useState } from 'react';
-import {
-  Keyboard,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
 import { useTodos } from '../../context/TodoContextProvider';
-import { useAuth } from '@/context/AuthContextProvider';
-import TodoCard from '../components/TodoCard';
 
-import { motivationalMessages } from '../../utils/utils';
-import Loading from '../components/loading';
-import AuthRegister from '../components/authRegister';
-import { useUIStore } from '@/store/uiStore';
-import AuthLogin from '../components/authLogin';
+import TodoCard from '../components/TodoCard';
+import { motivationalMessages } from '@/utils/utils';
 
 export default function Home() {
   const { colors } = useTheme();
   const { todos } = useTodos();
-  const { isLogin, setIsLogin } = useAuth();
 
-  const { setIsFriendsOpen, setIsLoginOpen, isLoginOpen } = useUIStore();
-
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
-  if (isLogin === false) {
-    return (
-      <>
-        <Loading />
-        {isLoginOpen ? (
-          <AuthLogin
-            setIsFriendsOpen={setIsFriendsOpen}
-            setIsLogin={setIsLogin}
-            dismissKeyboard={dismissKeyboard}
-            setIsLoginOpen={setIsLoginOpen}
-          />
-        ) : (
-          <AuthRegister
-            setIsFriendsOpen={setIsFriendsOpen}
-            setIsLogin={setIsLogin}
-            dismissKeyboard={dismissKeyboard}
-            setIsLoginOpen={setIsLoginOpen}
-          />
-        )}
-      </>
-    );
-  }
-
+  // Derived todo metrics (kept above the conditional so hooks order is stable)
   const completedTodos = todos.filter(t => t.completed).length;
   const totalTodos = todos.length;
   const isAllCompleted = totalTodos > 0 && completedTodos === totalTodos;
   const targetProgress = totalTodos > 0 ? completedTodos / totalTodos : 0;
 
+  // UI state hooks (always declared so hook order doesn't change)
   const [progress, setProgress] = useState(targetProgress);
   const [showCelebration, setShowCelebration] = useState(isAllCompleted);
   const [celebrationKey, setCelebrationKey] = useState(0);

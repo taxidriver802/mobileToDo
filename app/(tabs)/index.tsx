@@ -99,6 +99,7 @@ export default function Index() {
                   styles.todoContainer,
                   {
                     backgroundColor: colors.surface,
+                    opacity: areGoalsCompleted ? 0.5 : 1,
                     borderRadius: 8,
                     padding: 16,
                     marginVertical: 6,

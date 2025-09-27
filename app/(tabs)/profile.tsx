@@ -14,27 +14,25 @@ import { useTodos } from '../../context/TodoContextProvider';
 import Loading from '../components/loading';
 import Settings from '../components/Settings';
 import WeekTracker from '../components/tracker';
-import AuthRegister from '../components/authRegister';
-import AuthLogin from '../components/authLogin';
-import { useAuth } from '@/context/AuthContextProvider';
-import { useUIStore } from '@/store/uiStore';
 
-const profilePic = require('../../assets/images/profilePhoto.jpg');
+import { useAuth } from '@/context/AuthContextProvider';
+import { useUser } from '@/context/UserContextProvider';
+import { useUIStore } from '@/store/uiStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Profile() {
   const { colors } = useTheme();
   const { isLoading } = useThemeContext();
   const { streak } = useTodos();
 
-  const { isLogin, setIsLogin } = useAuth();
+  const { isLogin } = useAuth();
+  const { user } = useUser();
 
   const {
     isSettingsOpen,
     setIsSettingsOpen,
-    isFriendsOpen,
     setIsFriendsOpen,
-    isLoginOpen,
-    setIsLoginOpen,
+    isFriendsOpen,
     useUserName,
     setUseUserName,
   } = useUIStore();
@@ -43,12 +41,31 @@ export default function Profile() {
     return <Loading />;
   }
 
-  const userName = 'JAcox12';
-  const firstName = 'Jason';
-  const lastName = 'Cox';
+  React.useEffect(() => {
+    const loadPreference = async () => {
+      try {
+        const storedValue = await AsyncStorage.getItem('useUserName');
+        if (storedValue !== null) {
+          setUseUserName(JSON.parse(storedValue));
+        }
+      } catch (e) {
+        console.error('Failed to load setting:', e);
+      }
+    };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
+    loadPreference();
+  }, []);
+
+  const handleNavButtons = (btn: 'friends' | 'settings'): void => {
+    if (btn === 'settings') {
+      if (isFriendsOpen) return;
+      setIsSettingsOpen(!isSettingsOpen);
+    }
+
+    if (btn === 'friends') {
+      if (isSettingsOpen) return;
+      setIsFriendsOpen(!isFriendsOpen);
+    }
   };
 
   return (
@@ -69,9 +86,13 @@ export default function Profile() {
           Profile
         </Text>
         <View style={{ marginTop: 50 }}>
-          {isLogin ? (
+          {user?.profilePic !== 'default.jpg' ? (
             <Image
-              source={profilePic}
+              source={
+                user?.profilePic
+                  ? { uri: user.profilePic }
+                  : require('../../assets/images/profilePhoto.jpg') // fallback
+              }
               style={{
                 width: 200,
                 height: 200,
@@ -84,17 +105,12 @@ export default function Profile() {
               name="person-circle-outline"
               size={200}
               color={colors.text}
-              style={{
-                alignSelf: 'center',
-              }}
+              style={{ alignSelf: 'center' }}
             />
           )}
+
           <Text style={[styles.title, { color: colors.text }]}>
-            {isLogin
-              ? useUserName
-                ? userName
-                : `${firstName} ${lastName}`
-              : null}
+            {isLogin ? (useUserName ? user?.fullName : user?.username) : null}
           </Text>
         </View>
       </View>
@@ -109,7 +125,7 @@ export default function Profile() {
             left: 25,
           },
         ]}
-        onPress={() => setIsFriendsOpen(true)}
+        onPress={() => handleNavButtons('friends')}
       >
         <Text>
           <Ionicons name="people" size={15} color={colors.surface} />
@@ -126,10 +142,14 @@ export default function Profile() {
             right: 25,
           },
         ]}
-        onPress={() => setIsSettingsOpen(true)}
+        onPress={() => handleNavButtons('settings')}
       >
         <Text>
-          <Ionicons name="options" size={15} color={colors.surface} />
+          {!isSettingsOpen ? (
+            <Ionicons name="options" size={15} color={colors.surface} />
+          ) : (
+            <Ionicons name="close" size={15} color={colors.surface} />
+          )}
         </Text>
       </TouchableOpacity>
 
@@ -142,41 +162,13 @@ export default function Profile() {
         </View>
       )}
 
-      {!isLogin && (
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={() => setIsFriendsOpen(true)}
-        >
-          <Text style={[styles.buttonText, { color: colors.surface }]}>
-            Register
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {isSettingsOpen && (
+      {isSettingsOpen && !isFriendsOpen && (
         <Settings
           setIsSettingsOpen={setIsSettingsOpen}
+          isSettingsOpen={isSettingsOpen}
           useUserName={useUserName}
           setUseUserName={setUseUserName}
-          setIsLoginOpen={setIsLoginOpen}
-        />
-      )}
-
-      {isFriendsOpen && (
-        <AuthRegister
-          setIsFriendsOpen={setIsFriendsOpen}
-          setIsLoginOpen={setIsLoginOpen}
-          setIsLogin={setIsLogin}
-          dismissKeyboard={dismissKeyboard}
-        />
-      )}
-
-      {isLoginOpen && (
-        <AuthLogin
-          setIsFriendsOpen={setIsFriendsOpen}
-          setIsLoginOpen={setIsLoginOpen}
-          setIsLogin={setIsLogin}
-          dismissKeyboard={dismissKeyboard}
+          handleNavButtons={handleNavButtons}
         />
       )}
     </View>

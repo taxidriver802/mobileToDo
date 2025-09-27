@@ -1,41 +1,83 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeContext } from '../../context/ThemeContextProvider';
 import { useAuth } from '@/context/AuthContextProvider';
+import { UserProvider, useUser } from '@/context/UserContextProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type SettingsProps = {
   setIsSettingsOpen: (open: boolean) => void;
   setUseUserName: (open: boolean) => void;
   useUserName: boolean;
-  setIsLoginOpen: (open: boolean) => void;
+  handleNavButtons: (btn: 'friends' | 'settings') => void;
+  isSettingsOpen?: boolean;
 };
 
 const Settings: React.FC<SettingsProps> = ({
   setIsSettingsOpen,
   setUseUserName,
   useUserName,
-  setIsLoginOpen,
+  handleNavButtons,
+  isSettingsOpen,
 }) => {
   const { toggleDarkMode, colors } = useTheme();
-  const { isDarkMode } = useThemeContext();
+  const { setUser } = useUser();
 
-  const { logout, setIsLogin, isLogin } = useAuth();
+  const { logout, isLogin } = useAuth();
+
+  const toggleUserName = async () => {
+    try {
+      const newValue = !useUserName;
+      setUseUserName(newValue);
+      await AsyncStorage.setItem('useUserName', JSON.stringify(newValue));
+    } catch (e) {
+      console.error('Failed to save setting:', e);
+    }
+  };
 
   return (
-    <Modal transparent>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.container, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
-          <TouchableOpacity
-            style={[styles.close, { backgroundColor: colors.primary }]}
-            onPress={() => setIsSettingsOpen(false)}
-            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+    <View
+      style={{
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        position: 'absolute',
+        top: 0,
+        marginHorizontal: 'auto',
+        height: '110%',
+        width: '110%',
+      }}
+    >
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.surface,
+            height: '90%',
+            marginTop: 100,
+          },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.text }]}>Options</Text>
+
+        <View
+          style={{
+            marginTop: 125,
+            paddingBottom: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.textMuted,
+          }}
+        >
+          <Text
+            style={[
+              styles.text,
+              {
+                color: colors.textMuted,
+              },
+            ]}
           >
-            <Text style={[styles.buttonText, { color: colors.surface }]}>
-              X
-            </Text>
-          </TouchableOpacity>
+            Theme:
+          </Text>
           <TouchableOpacity
             style={[
               styles.button,
@@ -44,43 +86,96 @@ const Settings: React.FC<SettingsProps> = ({
             onPress={toggleDarkMode}
           >
             <Text style={[styles.buttonText, { color: colors.surface }]}>
-              {isDarkMode ? 'Toggle Light Mode' : 'Toggle Dark Mode'}
+              Change Theme
             </Text>
           </TouchableOpacity>
+        </View>
 
-          {isLogin ? (
-            <>
+        {isLogin ? (
+          <>
+            <View
+              style={{
+                marginTop: 25,
+                paddingBottom: 10,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.textMuted,
+              }}
+            >
+              <Text style={[styles.text, { color: colors.textMuted }]}>
+                Profile:
+              </Text>
               <TouchableOpacity
                 style={[
                   styles.button,
                   { backgroundColor: colors.primary, marginTop: 10 },
                 ]}
-                onPress={() => setUseUserName(!useUserName)}
+                onPress={() => toggleUserName()}
               >
                 <Text style={[styles.buttonText, { color: colors.surface }]}>
                   Toggle profile name
                 </Text>
               </TouchableOpacity>
+            </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  { backgroundColor: colors.primary, marginTop: 10 },
-                ]}
-                onPress={() => {
-                  logout();
-                  setIsLogin(false);
-                  setIsSettingsOpen(false);
-                  setIsLoginOpen(true);
-                }}
-              >
-                <Text style={[styles.buttonText, styles.logout]}>Logout</Text>
-              </TouchableOpacity>
-            </>
-          ) : null}
-        </View>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                {
+                  backgroundColor: colors.primary,
+                  position: 'absolute',
+                  bottom: 80,
+                  width: '100%',
+                  alignSelf: 'center',
+                },
+              ]}
+              onPress={() => {
+                logout();
+                setUser(null);
+                setIsSettingsOpen(false);
+              }}
+            >
+              <Text style={[styles.buttonText, styles.logout]}>Logout</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                {
+                  backgroundColor: colors.primary,
+                  position: 'absolute',
+                  top: -40,
+                  right: 13,
+                  width: 34,
+                  height: 27,
+                  padding: 0,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 7,
+                },
+              ]}
+              onPress={() => handleNavButtons('settings')}
+            >
+              <Text style={{ padding: 0 }}>
+                {!isSettingsOpen ? (
+                  <Ionicons
+                    name="options"
+                    size={15}
+                    color={colors.surface}
+                    style={{ padding: 0 }}
+                  />
+                ) : (
+                  <Ionicons
+                    name="close"
+                    size={15}
+                    color={colors.surface}
+                    style={{ padding: 0 }}
+                  />
+                )}
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : null}
       </View>
-    </Modal>
+    </View>
   );
 };
 
@@ -95,6 +190,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     height: 'auto',
   },
+  text: { fontSize: 16, fontWeight: '500' },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
@@ -127,7 +223,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
   close: { width: 25, position: 'absolute', top: 5, right: 5, borderRadius: 7 },
   logout: {
-    color: 'red',
+    color: 'rgba(160, 3, 3, 0.9)',
   },
 });
 
