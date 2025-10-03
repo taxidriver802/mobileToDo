@@ -28,6 +28,8 @@ export default function Profile() {
   const { isLogin } = useAuth();
   const { user } = useUser();
 
+  const [isUpdaterOpen, setIsUpdaterOpen] = React.useState(false);
+
   const {
     isSettingsOpen,
     setIsSettingsOpen,
@@ -56,7 +58,7 @@ export default function Profile() {
     loadPreference();
   }, []);
 
-  const handleNavButtons = (btn: 'friends' | 'settings'): void => {
+  const handleNavButtons = (btn: 'friends' | 'settings' | 'updater'): void => {
     if (btn === 'settings') {
       if (isFriendsOpen) return;
       setIsSettingsOpen(!isSettingsOpen);
@@ -65,6 +67,12 @@ export default function Profile() {
     if (btn === 'friends') {
       if (isSettingsOpen) return;
       setIsFriendsOpen(!isFriendsOpen);
+    }
+
+    if (btn === 'updater') {
+      if (isSettingsOpen) {
+        setIsUpdaterOpen(!isUpdaterOpen);
+      }
     }
   };
 
@@ -85,7 +93,13 @@ export default function Profile() {
         >
           Profile
         </Text>
-        <View style={{ marginTop: 50 }}>
+        <View
+          style={{
+            marginTop: 50,
+            borderColor: colors.textMuted,
+            borderBottomWidth: 2,
+          }}
+        >
           {user?.profilePic !== 'default.jpg' ? (
             <Image
               source={
@@ -109,7 +123,7 @@ export default function Profile() {
             />
           )}
 
-          <Text style={[styles.title, { color: colors.text }]}>
+          <Text style={[styles.title, { color: colors.text, marginTop: 20 }]}>
             {isLogin ? (useUserName ? user?.fullName : user?.username) : null}
           </Text>
         </View>
@@ -169,6 +183,8 @@ export default function Profile() {
           useUserName={useUserName}
           setUseUserName={setUseUserName}
           handleNavButtons={handleNavButtons}
+          isUpdaterOpen={isUpdaterOpen}
+          setIsUpdaterOpen={setIsUpdaterOpen}
         />
       )}
     </View>

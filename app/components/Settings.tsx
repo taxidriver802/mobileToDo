@@ -1,18 +1,20 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useThemeContext } from '../../context/ThemeContextProvider';
 import { useAuth } from '@/context/AuthContextProvider';
-import { UserProvider, useUser } from '@/context/UserContextProvider';
+import { useUser } from '@/context/UserContextProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import ProfileUpdater from './ProfileUpdater';
 
 type SettingsProps = {
   setIsSettingsOpen: (open: boolean) => void;
   setUseUserName: (open: boolean) => void;
   useUserName: boolean;
-  handleNavButtons: (btn: 'friends' | 'settings') => void;
+  handleNavButtons: (btn: 'friends' | 'settings' | 'updater') => void;
   isSettingsOpen?: boolean;
+  isUpdaterOpen: boolean;
+  setIsUpdaterOpen: (open: boolean) => void;
 };
 
 const Settings: React.FC<SettingsProps> = ({
@@ -21,10 +23,11 @@ const Settings: React.FC<SettingsProps> = ({
   useUserName,
   handleNavButtons,
   isSettingsOpen,
+  isUpdaterOpen,
+  setIsUpdaterOpen,
 }) => {
   const { toggleDarkMode, colors } = useTheme();
   const { setUser } = useUser();
-
   const { logout, isLogin } = useAuth();
 
   const toggleUserName = async () => {
@@ -35,6 +38,11 @@ const Settings: React.FC<SettingsProps> = ({
     } catch (e) {
       console.error('Failed to save setting:', e);
     }
+  };
+
+  const openProfileUpdate = () => {
+    // Navigation to Profile Update Screen
+    setIsUpdaterOpen(!isUpdaterOpen);
   };
 
   return (
@@ -60,42 +68,11 @@ const Settings: React.FC<SettingsProps> = ({
       >
         <Text style={[styles.title, { color: colors.text }]}>Options</Text>
 
-        <View
-          style={{
-            marginTop: 125,
-            paddingBottom: 10,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.textMuted,
-          }}
-        >
-          <Text
-            style={[
-              styles.text,
-              {
-                color: colors.textMuted,
-              },
-            ]}
-          >
-            Theme:
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: colors.primary, marginTop: 10 },
-            ]}
-            onPress={toggleDarkMode}
-          >
-            <Text style={[styles.buttonText, { color: colors.surface }]}>
-              Change Theme
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {isLogin ? (
           <>
             <View
               style={{
-                marginTop: 25,
+                marginTop: 125,
                 paddingBottom: 10,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.textMuted,
@@ -104,6 +81,18 @@ const Settings: React.FC<SettingsProps> = ({
               <Text style={[styles.text, { color: colors.textMuted }]}>
                 Profile:
               </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  { backgroundColor: colors.primary, marginTop: 10 },
+                ]}
+                onPress={() => openProfileUpdate()}
+              >
+                <Text style={[styles.buttonText, { color: colors.surface }]}>
+                  Update Profile
+                </Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.button,
@@ -112,7 +101,7 @@ const Settings: React.FC<SettingsProps> = ({
                 onPress={() => toggleUserName()}
               >
                 <Text style={[styles.buttonText, { color: colors.surface }]}>
-                  Toggle profile name
+                  {`Display name: ${!useUserName ? 'Username' : 'Name'}`}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -174,7 +163,41 @@ const Settings: React.FC<SettingsProps> = ({
             </TouchableOpacity>
           </>
         ) : null}
+
+        <View
+          style={{
+            marginTop: 25,
+            paddingBottom: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.textMuted,
+          }}
+        >
+          <Text
+            style={[
+              styles.text,
+              {
+                color: colors.textMuted,
+              },
+            ]}
+          >
+            Theme:
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              { backgroundColor: colors.primary, marginTop: 10 },
+            ]}
+            onPress={toggleDarkMode}
+          >
+            <Text style={[styles.buttonText, { color: colors.surface }]}>
+              Change Theme
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
+      {isUpdaterOpen ? (
+        <ProfileUpdater handleNavButtons={handleNavButtons} />
+      ) : null}
     </View>
   );
 };

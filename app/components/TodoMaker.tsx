@@ -105,7 +105,10 @@ const TodoMaker = ({
   }, [todoToEdit]);
 
   const handleSubmit = () => {
-    if (!title.trim() && !description.trim()) {
+    const hasTitle = !!title.trim();
+    const hasDescription = !!description.trim();
+
+    if (!hasTitle && !hasDescription) {
       Alert.alert(
         'Empty Todo',
         'Your todo is empty',
@@ -115,7 +118,7 @@ const TodoMaker = ({
       return;
     }
 
-    if (!title.trim()) {
+    if (!hasTitle) {
       Alert.alert(
         'Empty Title',
         'Your todo needs a title',

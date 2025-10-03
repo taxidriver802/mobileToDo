@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 
 import { ThemeProvider } from '../../context/ThemeContextProvider';
 import { TodosProvider } from '../../context/TodoContextProvider';
-import { UserProvider, useUser } from '../../context/UserContextProvider';
+import { useUser } from '../../context/UserContextProvider';
 import { useAuth } from '../../context/AuthContextProvider';
 
 import type { Todo } from './index';
@@ -15,7 +15,7 @@ const TabsLayout = () => {
   const { colors } = useTheme();
   const { isLogin, setIsLogin } = useAuth();
   const { setUser } = useUser();
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos] = useState<Todo[]>([]);
 
   React.useEffect(() => {
     (async () => {

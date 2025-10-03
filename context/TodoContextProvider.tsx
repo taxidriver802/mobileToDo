@@ -1,11 +1,16 @@
-// app/(tabs)/TodosContext.tsx
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import Toast from 'react-native-toast-message';
 
 import { useAuth } from '@/context/AuthContextProvider';
+import {
+  listGoals,
+  createGoal,
+  updateGoal,
+  deleteGoal,
+  type Goal,
+} from '@/api/goals';
 
-// Simplified Todo type is better, but keeping yours to match existing data
 export type Todo = {
   id: string;
   title: string;
@@ -22,9 +27,32 @@ type TodosContextType = {
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   streak: number;
   completionHistory: CompletionHistory;
+  isLoading: boolean;
+  refresh: () => Promise<void>;
+  addTodo: (title: string, description: string) => Promise<void>;
+  toggleComplete: (id: string, completed: boolean) => Promise<void>;
+  editTodo: (
+    id: string,
+    patch: { title?: string; description?: string }
+  ) => Promise<void>;
+  removeTodo: (id: string) => Promise<void>;
 };
 
 const TodosContext = createContext<TodosContextType | undefined>(undefined);
+
+const fromGoal = (g: Goal): Todo => ({
+  id: g._id,
+  title: g.title,
+  description: g.description,
+  completed: !!g.completed,
+});
+
+const toCache = (todos: Todo[]) =>
+  AsyncStorage.setItem('todos', JSON.stringify(todos));
+const fromCache = async (): Promise<Todo[]> => {
+  const s = await AsyncStorage.getItem('todos');
+  return s ? JSON.parse(s) : [];
+};
 
 export const TodosProvider = ({ children }: { children: ReactNode }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -35,7 +63,62 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   );
   const { isLogin } = useAuth();
 
-  // Only run effects if logged in
+  const refresh = React.useCallback(async () => {
+    if (!isLogin) return;
+    setIsLoading(true);
+    try {
+      const serverGoals = await listGoals();
+      const mapped = serverGoals.map(fromGoal);
+      setTodos(mapped);
+      await toCache(mapped);
+    } catch (err) {
+      console.error('[Todos] refresh failed, falling back to cache:', err);
+      const cached = await fromCache();
+      setTodos(cached);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLogin]);
+
+  const addTodo = React.useCallback(
+    async (title: string, description: string) => {
+      const created = await createGoal({ title, description });
+      const mapped = fromGoal(created);
+      setTodos(prev => [mapped, ...prev]);
+      await toCache([mapped, ...todos]);
+    },
+    [todos]
+  );
+
+  const toggleComplete = React.useCallback(
+    async (id: string, completed: boolean) => {
+      const updated = await updateGoal(id, { completed });
+      const mapped = fromGoal(updated);
+      setTodos(prev => prev.map(t => (t.id === id ? mapped : t)));
+      await toCache(todos.map(t => (t.id === id ? mapped : t)));
+    },
+    [todos]
+  );
+
+  const editTodo = React.useCallback(
+    async (id: string, patch: { title?: string; description?: string }) => {
+      const updated = await updateGoal(id, patch);
+      const mapped = fromGoal(updated);
+      setTodos(prev => prev.map(t => (t.id === id ? mapped : t)));
+      await toCache(todos.map(t => (t.id === id ? mapped : t)));
+    },
+    [todos]
+  );
+
+  const removeTodo = React.useCallback(
+    async (id: string) => {
+      await deleteGoal(id);
+      setTodos(prev => prev.filter(t => t.id !== id));
+      await toCache(todos.filter(t => t.id !== id));
+    },
+    [todos]
+  );
+
   React.useEffect(() => {
     if (!isLogin) {
       setTodos([]);
@@ -45,23 +128,36 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    (async () => {
+      try {
+        setIsLoading(true);
+        const cached = await fromCache();
+        if (cached.length) setTodos(cached);
+      } catch {}
+      await refresh();
+    })();
+  }, [isLogin, refresh]);
+
+  React.useEffect(() => {
+    if (!isLogin) return;
+
     const initializeAndCheckDailyReset = async () => {
       const today = new Date().toDateString();
-      const storedTodos = await AsyncStorage.getItem('todos');
-      const storedStreak = await AsyncStorage.getItem('streak');
-      const lastCheckDate = await AsyncStorage.getItem('lastDailyCheckDate');
-      const storedHistory = await AsyncStorage.getItem('completionHistory');
-      const initialTodos: Todo[] = storedTodos ? JSON.parse(storedTodos) : [];
 
+      const storedStreak = await AsyncStorage.getItem('streak');
       if (storedStreak) setStreak(parseInt(storedStreak, 10));
+
+      const storedHistory = await AsyncStorage.getItem('completionHistory');
       if (storedHistory) setCompletionHistory(JSON.parse(storedHistory));
 
-      if (lastCheckDate !== today && initialTodos.length > 0) {
-        const allWereCompleted = initialTodos.every(todo => todo.completed);
+      const lastCheckDate = await AsyncStorage.getItem('lastDailyCheckDate');
+
+      if (lastCheckDate && lastCheckDate !== today && todos.length > 0) {
+        const allWereCompleted = todos.every(t => !!t.completed);
 
         const newHistory = {
-          ...completionHistory,
-          [lastCheckDate!]: allWereCompleted,
+          ...(storedHistory ? JSON.parse(storedHistory) : {}),
+          [lastCheckDate]: allWereCompleted,
         };
         setCompletionHistory(newHistory);
         await AsyncStorage.setItem(
@@ -80,38 +176,33 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
           });
         }
 
-        const resetTodos = initialTodos.map(todo => ({
-          ...todo,
-          completed: false,
-        }));
+        const resetTodos = todos.map(t => ({ ...t, completed: false }));
         setTodos(resetTodos);
+        await toCache(resetTodos);
         await AsyncStorage.setItem('lastDailyCheckDate', today);
-      } else {
-        setTodos(initialTodos);
+
+        Promise.all(
+          resetTodos.map(t =>
+            updateGoal(t.id, { completed: false }).catch(() => null)
+          )
+        ).catch(() => null);
+      } else if (!lastCheckDate) {
+        await AsyncStorage.setItem('lastDailyCheckDate', today);
       }
-      setIsLoading(false);
     };
 
     initializeAndCheckDailyReset();
-  }, [isLogin]);
+  }, [isLogin, todos]);
 
-  // Save todos only if logged in
   React.useEffect(() => {
-    if (!isLogin || isLoading) return;
+    if (!isLogin) return;
+    toCache(todos).catch(err =>
+      console.error('Error saving todos cache:', err)
+    );
+  }, [todos, isLogin]);
 
-    const saveTodos = async () => {
-      try {
-        await AsyncStorage.setItem('todos', JSON.stringify(todos));
-      } catch (error) {
-        console.error('Error saving todos:', error);
-      }
-    };
-    saveTodos();
-  }, [todos, isLogin, isLoading]);
-
-  // Handle streak only if logged in
   React.useEffect(() => {
-    if (!isLogin || isLoading || todos.length === 0) return;
+    if (!isLogin || todos.length === 0) return;
     const allCompleted = todos.every(todo => todo.completed);
     if (!allCompleted) return;
 
@@ -142,11 +233,22 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     checkAndIncreaseStreak();
-  }, [todos, streak, isLogin, isLoading]);
+  }, [todos, streak, isLogin]);
 
   return (
     <TodosContext.Provider
-      value={{ todos, setTodos, streak, completionHistory }}
+      value={{
+        todos,
+        setTodos,
+        streak,
+        completionHistory,
+        isLoading,
+        refresh,
+        addTodo,
+        toggleComplete,
+        editTodo,
+        removeTodo,
+      }}
     >
       {children}
     </TodosContext.Provider>
@@ -155,9 +257,7 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
 
 export const useTodos = () => {
   const context = useContext(TodosContext);
-  if (!context) {
-    throw new Error('useTodos must be used within a TodosProvider');
-  }
+  if (!context) throw new Error('useTodos must be used within a TodosProvider');
   return context;
 };
 

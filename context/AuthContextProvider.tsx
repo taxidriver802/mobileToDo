@@ -54,7 +54,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkStorage = async () => {
     const keys = await AsyncStorage.getAllKeys();
     const result = await AsyncStorage.multiGet(keys);
-    console.log('Result: ', result);
   };
   // During development you can point the app to a public tunnel (ngrok)
   // so Expo Tunnel or LAN issues don't block requests. Replace the

@@ -29,7 +29,6 @@ export default function TEMPauthRegister({ onSwitchMode }: Props) {
   const handleRegister = async () => {
     try {
       setBusy(true);
-      console.log('Registering with', fullName, username, password);
 
       const ok = await registerAndHydrate(username, password, fullName);
       if (ok) {

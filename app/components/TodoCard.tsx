@@ -15,7 +15,6 @@ export default function TodoCard({ todo }: TodoCardProps) {
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const toggleComplete = (todo: { id: string; completed?: boolean }) => {
-    // fade out before marking completed
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 300,
@@ -26,7 +25,6 @@ export default function TodoCard({ todo }: TodoCardProps) {
           t.id === todo.id ? { ...t, completed: !t.completed } : t
         )
       );
-      // reset animation for when it re-renders as active again tomorrow
 
       setTimeout(() => {
         fadeAnim.setValue(1);
