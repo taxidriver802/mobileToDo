@@ -11,7 +11,7 @@ import { motivationalMessages } from '@/utils/utils';
 
 export default function Home() {
   const { colors } = useTheme();
-  const { todos } = useTodos();
+  const { todos, toggleComplete } = useTodos();
 
   // Derived todo metrics (kept above the conditional so hooks order is stable)
   const completedTodos = todos.filter(t => t.completed).length;
@@ -86,7 +86,7 @@ export default function Home() {
                 showsVerticalScrollIndicator={false}
               >
                 {activeTodos.map(todo => (
-                  <TodoCard key={todo.id} todo={todo} />
+                  <TodoCard key={todo.id} todo={todo} onToggleComplete={() => toggleComplete(todo.id, !todo.completed)}/>
                 ))}
               </ScrollView>
             </View>

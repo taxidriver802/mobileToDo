@@ -1,5 +1,4 @@
 import useTheme from '@/hooks/useTheme';
-import { nanoid } from 'nanoid/non-secure';
 import React from 'react';
 import {
   Alert,
@@ -16,6 +15,8 @@ import {
 
 import type { Todo } from '../(tabs)/index';
 import { useTodos } from '../../context/TodoContextProvider';
+
+import { createGoal, updateGoalResetCompletion } from '@/api/goals';
 
 interface TodoMakerProps {
   setIsTodoOpen: (isOpen: boolean) => void;
@@ -84,6 +85,18 @@ const FloatingLabelInput = ({
   );
 };
 
+const goalToTodo = (g: {
+  _id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+}) => ({
+  id: g._id,
+  title: g.title,
+  description: g.description,
+  completed: g.completed ?? false,
+});
+
 const TodoMaker = ({
   todoToEdit,
   handleClose,
@@ -93,6 +106,7 @@ const TodoMaker = ({
   const { todos, setTodos } = useTodos();
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (todoToEdit) {
@@ -104,59 +118,79 @@ const TodoMaker = ({
     }
   }, [todoToEdit]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const hasTitle = !!title.trim();
     const hasDescription = !!description.trim();
+    console.log(
+      '[TodoMaker.submit] hasTitle:',
+      hasTitle,
+      'hasDescription:',
+      hasDescription
+    );
 
     if (!hasTitle && !hasDescription) {
       Alert.alert(
         'Empty Todo',
         'Your todo is empty',
         [{ text: 'Close', style: 'cancel' }],
-        { cancelable: true }
+        {
+          cancelable: true,
+        }
       );
       return;
     }
-
     if (!hasTitle) {
       Alert.alert(
         'Empty Title',
         'Your todo needs a title',
         [{ text: 'Close', style: 'cancel' }],
-        { cancelable: true }
+        {
+          cancelable: true,
+        }
       );
       return;
     }
 
-    if (todoToEdit) {
-      setTodos(prev =>
-        prev.map(t =>
-          t.id === todoToEdit.id
-            ? {
-                ...t,
-                title: title.trim(),
-                description: description.trim(),
-                completed: false,
-                id: t.id,
-                lastUpdated: new Date().toDateString(),
-              }
-            : t
-        )
-      );
-      setSelectedTodo?.(null);
-    } else {
-      const newTodo: Todo = {
-        title: title.trim(),
-        description: description.trim(),
-        id: nanoid(),
-        completed: false,
-      };
-      setTodos(prev => [...prev, newTodo]);
-    }
+    try {
+      setSubmitting(true);
 
-    setTitle('');
-    setDescription('');
-    handleClose?.();
+      if (todoToEdit) {
+        console.log('[TodoMaker.submit.edit] editing existing todo...');
+
+        // UPDATE on server
+        const updatedGoal = await updateGoalResetCompletion(todoToEdit.id, {
+          title: title.trim(),
+          description: description.trim(),
+        });
+
+        const updatedTodo = goalToTodo(updatedGoal);
+        // update local state
+        setTodos(prev =>
+          prev.map(t => (t.id === todoToEdit.id ? updatedTodo : t))
+        );
+        setSelectedTodo?.(null);
+      } else {
+        console.log('[TodoMaker.submit] creating new todo...');
+
+        // CREATE on server
+        const createdGoal = await createGoal({
+          title: title.trim(),
+          description: description.trim(),
+        });
+
+        const newTodo = goalToTodo(createdGoal);
+        setTodos(prev => [...prev, newTodo]); // append to local list
+      }
+
+      setTitle('');
+      setDescription('');
+      handleClose?.();
+    } catch (err: any) {
+      console.error('[TodoMaker.submit] error ->', err?.message || String(err));
+      Alert.alert('Save failed', err?.message || 'Could not save goal.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

@@ -30,7 +30,7 @@ export default function Index() {
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
   const [redirecting, setRedirecting] = React.useState(true);
 
-  const { todos, setTodos } = useTodos();
+  const { todos, setTodos, toggleComplete } = useTodos();
 
   const router = useRouter();
 
@@ -138,13 +138,7 @@ export default function Index() {
                   ) : null}
                 </View>
                 <TouchableOpacity
-                  onPress={() => {
-                    setTodos(prev =>
-                      prev.map((t, i) =>
-                        i === idx ? { ...t, completed: !t.completed } : t
-                      )
-                    );
-                  }}
+                  onPress={() => toggleComplete(todo.id, !todo.completed)}
                   style={{
                     width: 28,
                     height: 28,
@@ -152,11 +146,11 @@ export default function Index() {
                     borderWidth: 2,
                     borderColor: todo.completed ? 'green' : colors.text,
                     backgroundColor: todo.completed ? 'green' : 'transparent',
-                    alignItems: 'center', // To center the inner checkmark
-                    justifyContent: 'center', // To center the inner checkmark
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     marginTop: 10,
                   }}
-                  disabled={areGoalsCompleted}
+                  disabled={areGoalsCompleted} // keep your streak rule if desired
                 >
                   {todo.completed && (
                     <View

@@ -1,34 +1,50 @@
 import useTheme from '@/hooks/useTheme';
-import React, { useRef } from 'react';
-import { Animated, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Alert, Animated, Text, TouchableOpacity, View } from 'react-native';
 import { useTodos } from '../../context/TodoContextProvider';
-
 import type { Todo } from '../(tabs)/index';
 
 interface TodoCardProps {
   todo: Todo;
+  /** Optional override: if provided, we'll call this instead of context.toggleComplete */
+  onToggleComplete?: () => Promise<void> | void;
 }
 
-export default function TodoCard({ todo }: TodoCardProps) {
+export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
   const { colors } = useTheme();
-  const { setTodos } = useTodos();
+  const { toggleComplete } = useTodos(); // <-- use provider, not setTodos
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const mountedRef = useRef(true);
 
-  const toggleComplete = (todo: { id: string; completed?: boolean }) => {
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const handleToggle = () => {
+    // Fade out first for a snappy UI
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 300,
+      duration: 200,
       useNativeDriver: true,
-    }).start(() => {
-      setTodos(prev =>
-        prev.map(t =>
-          t.id === todo.id ? { ...t, completed: !t.completed } : t
-        )
-      );
+    }).start(async () => {
+      try {
+        // Use the prop if provided (e.g., Home passes its own), otherwise call context
+        const maybePromise =
+          onToggleComplete?.() ??
+          toggleComplete(todo.id, !(todo.completed ?? false));
+        await Promise.resolve(maybePromise);
+      } catch (e: any) {
+        // On error, bring it back and notify
+        if (mountedRef.current) fadeAnim.setValue(1);
+        Alert.alert('Update failed', e?.message ?? 'Could not update goal.');
+        return;
+      }
 
-      setTimeout(() => {
-        fadeAnim.setValue(1);
-      }, 300);
+      // If this card is still on screen (e.g., on a list that keeps completed items),
+      // reset opacity to 1 so it’s visible. If it was removed (active list), this is a no-op.
+      if (mountedRef.current) fadeAnim.setValue(1);
     });
   };
 
@@ -62,7 +78,7 @@ export default function TodoCard({ todo }: TodoCardProps) {
         >
           {todo.title}
         </Text>
-        {todo.description && (
+        {!!todo.description && (
           <Text
             style={{
               color: colors.text,
@@ -77,7 +93,7 @@ export default function TodoCard({ todo }: TodoCardProps) {
       </View>
 
       <TouchableOpacity
-        onPress={() => toggleComplete(todo)}
+        onPress={handleToggle}
         style={{
           alignSelf: 'flex-start',
           justifyContent: 'flex-end',

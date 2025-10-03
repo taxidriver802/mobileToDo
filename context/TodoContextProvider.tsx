@@ -92,12 +92,33 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
 
   const toggleComplete = React.useCallback(
     async (id: string, completed: boolean) => {
-      const updated = await updateGoal(id, { completed });
-      const mapped = fromGoal(updated);
-      setTodos(prev => prev.map(t => (t.id === id ? mapped : t)));
-      await toCache(todos.map(t => (t.id === id ? mapped : t)));
+      // optimistic flip
+      let rollback: Todo[] | null = null;
+      setTodos(prev => {
+        rollback = prev; // capture for rollback
+        const next = prev.map(t => (t.id === id ? { ...t, completed } : t));
+        toCache(next);
+        return next;
+      });
+
+      try {
+        const updated = await updateGoal(id, { completed });
+        const mapped = fromGoal(updated);
+        setTodos(prev => {
+          const next = prev.map(t => (t.id === id ? mapped : t));
+          toCache(next);
+          return next;
+        });
+      } catch (e) {
+        // revert on failure
+        if (rollback) {
+          setTodos(rollback);
+          toCache(rollback);
+        }
+        throw e;
+      }
     },
-    [todos]
+    []
   );
 
   const editTodo = React.useCallback(
