@@ -1,14 +1,7 @@
 import useTheme from '@/hooks/useTheme';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import {
-  Image,
-  Keyboard,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useThemeContext } from '../../context/ThemeContextProvider';
 import { useTodos } from '../../context/TodoContextProvider';
 import Loading from '../components/loading';
@@ -19,6 +12,7 @@ import { useAuth } from '@/context/AuthContextProvider';
 import { useUser } from '@/context/UserContextProvider';
 import { useUIStore } from '@/store/uiStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SlideUpSheet from '../components/slideUpSheet';
 
 export default function Profile() {
   const { colors } = useTheme();
@@ -58,23 +52,28 @@ export default function Profile() {
     loadPreference();
   }, []);
 
-  const handleNavButtons = (btn: 'friends' | 'settings' | 'updater'): void => {
-    if (btn === 'settings') {
-      if (isFriendsOpen) return;
-      setIsSettingsOpen(!isSettingsOpen);
-    }
-
-    if (btn === 'friends') {
-      if (isSettingsOpen) return;
-      setIsFriendsOpen(!isFriendsOpen);
-    }
-
-    if (btn === 'updater') {
-      if (isSettingsOpen) {
-        setIsUpdaterOpen(!isUpdaterOpen);
+  const handleNavButtons = React.useCallback(
+    (btn: 'friends' | 'settings' | 'updater'): void => {
+      switch (btn) {
+        case 'settings': {
+          if (isFriendsOpen) return;
+          setIsSettingsOpen(!isSettingsOpen);
+          return;
+        }
+        case 'friends': {
+          if (isSettingsOpen) return;
+          setIsFriendsOpen(!isFriendsOpen);
+          return;
+        }
+        case 'updater': {
+          if (!isSettingsOpen) return; // only when settings is open
+          setIsUpdaterOpen(prev => !prev);
+          return;
+        }
       }
-    }
-  };
+    },
+    [isFriendsOpen, isSettingsOpen]
+  );
 
   return (
     <View
@@ -91,6 +90,8 @@ export default function Profile() {
             { color: colors.text, marginTop: 45 },
           ]}
         >
+          {/* Profile */}
+          {/* {isLogin ? (useUserName ? user?.fullName : user?.username) : null} */}
           Profile
         </Text>
         <View
@@ -159,11 +160,7 @@ export default function Profile() {
         onPress={() => handleNavButtons('settings')}
       >
         <Text>
-          {!isSettingsOpen ? (
-            <Ionicons name="options" size={15} color={colors.surface} />
-          ) : (
-            <Ionicons name="close" size={15} color={colors.surface} />
-          )}
+          <Ionicons name="options" size={15} color={colors.surface} />
         </Text>
       </TouchableOpacity>
 
@@ -176,7 +173,12 @@ export default function Profile() {
         </View>
       )}
 
-      {isSettingsOpen && !isFriendsOpen && (
+      <SlideUpSheet
+        open={isSettingsOpen && !isFriendsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        heightPct={0.9}
+        sheetStyle={{ backgroundColor: colors.surface }}
+      >
         <Settings
           setIsSettingsOpen={setIsSettingsOpen}
           isSettingsOpen={isSettingsOpen}
@@ -186,7 +188,7 @@ export default function Profile() {
           isUpdaterOpen={isUpdaterOpen}
           setIsUpdaterOpen={setIsUpdaterOpen}
         />
-      )}
+      </SlideUpSheet>
     </View>
   );
 }

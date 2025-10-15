@@ -100,6 +100,7 @@ export async function loginAndHydrate(
   try {
     const data = await login(username, password); // sets token (mem + storage)
     const user = await getMe(); // uses in-memory token
+
     return { ok: true, token: data.token, user };
   } catch (e: any) {
     return { ok: false, message: e?.message || 'Login failed.' };
@@ -114,6 +115,7 @@ export async function registerAndHydrate(
   try {
     const data = await register(username, password, fullName); // sets token
     const user = await getMe();
+
     return { ok: true, token: data.token, user };
   } catch (e: any) {
     return { ok: false, message: e?.message || 'Registration failed.' };
@@ -378,6 +380,8 @@ const isJwtExpired = (token: string) => {
     return true; // bad token -> treat as expired
   }
 };
+
+
 
 export async function bootstrapAuth() {
   // Lightweight boot that just ensures we land in the right screen.

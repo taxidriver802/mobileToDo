@@ -1,4 +1,4 @@
-import useTheme from '@/hooks/useTheme';
+import useTheme, { ThemeName } from '@/hooks/useTheme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '@/context/AuthContextProvider';
@@ -6,6 +6,38 @@ import { useUser } from '@/context/UserContextProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import ProfileUpdater from './ProfileUpdater';
+import SlideUpSheet from './slideUpSheet';
+
+const THEME_OPTIONS: ThemeName[] = [
+  'light',
+  'dark',
+  'forest',
+  'amoled',
+  'rose',
+  'sunset',
+  'midnight',
+  'arctic',
+  'solarizedDark',
+  'solarizedLight',
+  'cyber',
+];
+
+const DARK_NAMES = new Set<ThemeName>([
+  'dark',
+  'forest',
+  'amoled',
+  'solarizedDark',
+  'midnight',
+  'cyber',
+]);
+
+const LIGHT_NAMES = new Set<ThemeName>([
+  'light',
+  'rose',
+  'solarizedLight',
+  'arctic',
+  'sunset',
+]);
 
 type SettingsProps = {
   setIsSettingsOpen: (open: boolean) => void;
@@ -26,9 +58,25 @@ const Settings: React.FC<SettingsProps> = ({
   isUpdaterOpen,
   setIsUpdaterOpen,
 }) => {
-  const { toggleDarkMode, colors } = useTheme();
+  const { colors, themeName, setTheme } = useTheme();
   const { setUser } = useUser();
   const { logout, isLogin } = useAuth();
+
+  const [updaterBusy, setUpdaterBusy] = React.useState(false);
+
+  const [filter, setFilter] = React.useState<'light' | 'dark'>(() => {
+    return DARK_NAMES.has(themeName) ? 'dark' : 'light';
+  });
+
+  React.useEffect(() => {
+    setFilter(DARK_NAMES.has(themeName) ? 'dark' : 'light');
+  }, [themeName]);
+
+  const filtered = React.useMemo(() => {
+    return filter === 'light'
+      ? THEME_OPTIONS.filter(n => LIGHT_NAMES.has(n))
+      : THEME_OPTIONS.filter(n => DARK_NAMES.has(n));
+  }, [filter]);
 
   const toggleUserName = async () => {
     try {
@@ -42,25 +90,26 @@ const Settings: React.FC<SettingsProps> = ({
 
   const openProfileUpdate = () => {
     // Navigation to Profile Update Screen
+    setUpdaterBusy(true);
     setIsUpdaterOpen(!isUpdaterOpen);
   };
 
   return (
     <View
       style={{
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        /* backgroundColor: 'rgba(0,0,0,0.5)', */
         position: 'absolute',
         top: 0,
         marginHorizontal: 'auto',
-        height: '110%',
-        width: '110%',
+        height: '100%',
+        width: '100%',
       }}
     >
       <View
         style={[
           styles.container,
           {
-            backgroundColor: colors.surface,
+            backgroundColor: colors.bg,
             height: '90%',
             marginTop: 100,
           },
@@ -75,10 +124,10 @@ const Settings: React.FC<SettingsProps> = ({
                 marginTop: 125,
                 paddingBottom: 10,
                 borderBottomWidth: 1,
-                borderBottomColor: colors.textMuted,
+                borderBottomColor: colors.text,
               }}
             >
-              <Text style={[styles.text, { color: colors.textMuted }]}>
+              <Text style={[styles.text, { color: colors.text }]}>
                 Profile:
               </Text>
 
@@ -169,35 +218,118 @@ const Settings: React.FC<SettingsProps> = ({
             marginTop: 25,
             paddingBottom: 10,
             borderBottomWidth: 1,
-            borderBottomColor: colors.textMuted,
+            borderBottomColor: colors.text,
           }}
         >
-          <Text
-            style={[
-              styles.text,
-              {
-                color: colors.textMuted,
-              },
-            ]}
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
-            Theme:
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: colors.primary, marginTop: 10 },
-            ]}
-            onPress={toggleDarkMode}
-          >
-            <Text style={[styles.buttonText, { color: colors.surface }]}>
-              Change Theme
+            <Text
+              style={[
+                styles.text,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
+              Theme:
             </Text>
-          </TouchableOpacity>
+
+            <View
+              style={[
+                styles.segment,
+                {
+                  borderColor: colors.border,
+                  transform: [{ translateY: -10 }],
+                },
+              ]}
+            >
+              {(['light', 'dark'] as const).map(opt => {
+                const active = filter === opt;
+                return (
+                  <TouchableOpacity
+                    key={opt}
+                    onPress={() => setFilter(opt)}
+                    style={[
+                      styles.segmentBtn,
+                      {
+                        backgroundColor: active
+                          ? colors.primary
+                          : 'transparent',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color: active ? colors.surface : colors.text,
+                        fontWeight: active
+                          ? ('700' as const)
+                          : ('500' as const),
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {opt}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.themeGrid}>
+            {filtered.map(name => {
+              const isActive = themeName === name;
+              return (
+                <TouchableOpacity
+                  key={name}
+                  onPress={() => setTheme(name)}
+                  style={[
+                    styles.themeTile,
+                    {
+                      borderColor: isActive ? colors.primary : colors.border,
+                      backgroundColor: colors.surface,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      marginTop: 8,
+                      color: isActive ? colors.primary : colors.text,
+                      fontWeight: isActive
+                        ? ('700' as const)
+                        : ('600' as const),
+                      textTransform: 'capitalize',
+                      textAlign: 'center',
+                    }}
+                    numberOfLines={1}
+                  >
+                    {name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </View>
-      {isUpdaterOpen ? (
-        <ProfileUpdater handleNavButtons={handleNavButtons} />
-      ) : null}
+
+      <SlideUpSheet
+        open={isUpdaterOpen}
+        onClose={() => setIsUpdaterOpen(false)}
+        onOpenStart={() => setUpdaterBusy(true)}
+        onOpenEnd={() => setUpdaterBusy(false)}
+        onCloseStart={() => setUpdaterBusy(true)}
+        onCloseEnd={() => setUpdaterBusy(false)}
+        backdropStyle={{ backgroundColor: 'transparent' }}
+        dismissOnBackdropPress={false}
+        heightPct={0.8}
+        sheetStyle={{ backgroundColor: `transparent` }}
+      >
+        <ProfileUpdater
+          handleNavButtons={handleNavButtons}
+          sheetBusy={updaterBusy}
+          isOpen={isUpdaterOpen}
+        />
+      </SlideUpSheet>
     </View>
   );
 };
@@ -247,6 +379,55 @@ const styles = StyleSheet.create({
   close: { width: 25, position: 'absolute', top: 5, right: 5, borderRadius: 7 },
   logout: {
     color: 'rgba(160, 3, 3, 0.9)',
+  },
+  themeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 10,
+  },
+  themePill: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  segment: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 1,
+    alignSelf: 'flex-start',
+  },
+  segmentBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    marginHorizontal: 2,
+  },
+  themeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  themeTile: {
+    width: '48%',
+    padding: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    elevation: 2,
+  },
+  swatchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  swatch: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
   },
 });
 

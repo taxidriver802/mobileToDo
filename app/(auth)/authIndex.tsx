@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import useTheme from '@/hooks/useTheme';
-import LoginScreen from './TEMPauthLogin';
-import RegisterScreen from './TEMPauthRegister';
+import LoginScreen from './AuthLogin';
+import RegisterScreen from './AuthRegister';
 
 type Mode = 'login' | 'register';
 
@@ -46,7 +46,7 @@ export default function AuthIndex() {
           {mode === 'login' ? 'Welcome back' : 'Create your account'}
         </Text>
 
-        {/* Render the chosen form. Pass a switcher so each can flip modes */}
+        {/* Render the chosen form.*/}
         {mode === 'login' ? (
           <LoginScreen onSwitchMode={() => setMode('register')} />
         ) : (

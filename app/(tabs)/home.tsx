@@ -7,19 +7,19 @@ import { ProgressBar } from 'react-native-paper';
 import { useTodos } from '../../context/TodoContextProvider';
 
 import TodoCard from '../components/TodoCard';
-import { motivationalMessages } from '@/utils/utils';
+import { motivationalMessages } from '@/app/utils/utils';
 
 export default function Home() {
   const { colors } = useTheme();
   const { todos, toggleComplete } = useTodos();
 
-  // Derived todo metrics (kept above the conditional so hooks order is stable)
+  // Derived todo metrics
   const completedTodos = todos.filter(t => t.completed).length;
   const totalTodos = todos.length;
   const isAllCompleted = totalTodos > 0 && completedTodos === totalTodos;
   const targetProgress = totalTodos > 0 ? completedTodos / totalTodos : 0;
 
-  // UI state hooks (always declared so hook order doesn't change)
+  // UI state hooks
   const [progress, setProgress] = useState(targetProgress);
   const [showCelebration, setShowCelebration] = useState(isAllCompleted);
   const [celebrationKey, setCelebrationKey] = useState(0);
@@ -86,7 +86,13 @@ export default function Home() {
                 showsVerticalScrollIndicator={false}
               >
                 {activeTodos.map(todo => (
-                  <TodoCard key={todo.id} todo={todo} onToggleComplete={() => toggleComplete(todo.id, !todo.completed)}/>
+                  <TodoCard
+                    key={todo.id}
+                    todo={todo}
+                    onToggleComplete={() =>
+                      toggleComplete(todo.id, !todo.completed)
+                    }
+                  />
                 ))}
               </ScrollView>
             </View>

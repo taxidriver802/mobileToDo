@@ -1,4 +1,4 @@
-// app/(auth)/TEMPauthLogin.tsx
+// app/(auth)/TEMPauthRegister.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -8,35 +8,46 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-/* import { login } from '../../api/auth'; */
+import { registerAndHydrate } from '../../api/auth';
 import useTheme from '@/hooks/useTheme';
 import Loading from '../components/loading';
 import { useAuth } from '@/context/AuthContextProvider';
-import { useUser } from '@/context/UserContextProvider';
-import { login, loginAndHydrate } from '../../api/auth';
+import Toast from 'react-native-toast-message';
 
 type Props = {
   onSwitchMode?: () => void;
 };
 
-export default function TEMPauthLogin({ onSwitchMode }: Props) {
+export default function AuthRegister({ onSwitchMode }: Props) {
   const { colors } = useTheme();
   const { setIsLogin } = useAuth();
-  const { fetchUser } = useUser();
 
+  const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     try {
       setBusy(true);
 
-      const ok = await loginAndHydrate(username, password);
-      if (ok) {
+      const res = await registerAndHydrate(username, password, fullName);
+
+      if (res.ok) {
+        Toast.show({
+          type: 'success',
+          text1: 'Registration Successful',
+          text2: 'You are now logged in',
+          position: 'bottom',
+        });
         setIsLogin(true); // AuthGate will route into app
       } else {
-        Alert.alert('Login failed', 'Please check your credentials');
+        Toast.show({
+          type: 'error',
+          text1: 'Registration Failed',
+          text2: 'Please try again',
+          position: 'bottom',
+        });
       }
     } catch (e) {
       Alert.alert('Error', 'Something went wrong');
@@ -48,6 +59,16 @@ export default function TEMPauthLogin({ onSwitchMode }: Props) {
   return (
     <View style={{ marginTop: 24 }}>
       {busy && <Loading />}
+      <TextInput
+        placeholder="Full name"
+        value={fullName}
+        onChangeText={setFullName}
+        style={[
+          styles.input,
+          { color: colors.text, borderColor: colors.border },
+        ]}
+        placeholderTextColor={colors.textMuted}
+      />
       <TextInput
         placeholder="Username"
         value={username}
@@ -71,10 +92,12 @@ export default function TEMPauthLogin({ onSwitchMode }: Props) {
         placeholderTextColor={colors.textMuted}
       />
       <TouchableOpacity
-        onPress={handleLogin}
+        onPress={handleRegister}
         style={[styles.btn, { backgroundColor: colors.primary }]}
       >
-        <Text style={[styles.btnText, { color: colors.surface }]}>Log in</Text>
+        <Text style={[styles.btnText, { color: colors.surface }]}>
+          Create account
+        </Text>
       </TouchableOpacity>
     </View>
   );

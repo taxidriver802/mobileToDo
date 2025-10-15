@@ -121,12 +121,6 @@ const TodoMaker = ({
   const handleSubmit = async () => {
     const hasTitle = !!title.trim();
     const hasDescription = !!description.trim();
-    console.log(
-      '[TodoMaker.submit] hasTitle:',
-      hasTitle,
-      'hasDescription:',
-      hasDescription
-    );
 
     if (!hasTitle && !hasDescription) {
       Alert.alert(
@@ -155,8 +149,6 @@ const TodoMaker = ({
       setSubmitting(true);
 
       if (todoToEdit) {
-        console.log('[TodoMaker.submit.edit] editing existing todo...');
-
         // UPDATE on server
         const updatedGoal = await updateGoalResetCompletion(todoToEdit.id, {
           title: title.trim(),
@@ -170,8 +162,6 @@ const TodoMaker = ({
         );
         setSelectedTodo?.(null);
       } else {
-        console.log('[TodoMaker.submit] creating new todo...');
-
         // CREATE on server
         const createdGoal = await createGoal({
           title: title.trim(),

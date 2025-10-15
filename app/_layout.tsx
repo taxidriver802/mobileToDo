@@ -1,13 +1,21 @@
 // app/_layout.tsx
-import React, { useEffect } from 'react';
-import { Href, Slot, useRouter, useSegments } from 'expo-router';
+import React, { useEffect, useMemo } from 'react';
+import {
+  Href,
+  Slot,
+  useRouter,
+  useSegments,
+  useRootNavigationState,
+} from 'expo-router';
 import Toast from 'react-native-toast-message';
-import { ThemeProvider } from '../hooks/useTheme';
+import { View, ActivityIndicator } from 'react-native';
+
+import { ThemeProvider } from '@/hooks/useTheme';
+import useTheme from '@/hooks/useTheme'; // use after provider
 import { AuthProvider, useAuth } from '@/context/AuthContextProvider';
 import { UserProvider } from '@/context/UserContextProvider';
-import { View, ActivityIndicator } from 'react-native';
-import { useRootNavigationState } from 'expo-router';
 
+import { createToastConfig } from './utils/createToastConfig'; // adjust if your path differs
 
 function Splash() {
   return (
@@ -21,34 +29,38 @@ function AuthGate() {
   const { isLogin, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-
   const navState = useRootNavigationState();
 
   const AUTH_LOGIN: Href = '/(auth)/authIndex';
   const APP_ROOT: Href = '/(tabs)';
 
   useEffect(() => {
-    if (!navState?.key || isLoading) return; // wait for router + auth
+    if (!navState?.key || isLoading) return;
     const inAuthGroup = segments[0] === '(auth)';
     if (!isLogin && !inAuthGroup) router.replace(AUTH_LOGIN);
     else if (isLogin && inAuthGroup) router.replace(APP_ROOT);
   }, [navState?.key, isLogin, isLoading, segments]);
 
   if (isLoading) return <Splash />;
-
-  // Always render current route; the effect above redirects if needed
   return <Slot />;
+}
+
+/** Child under ThemeProvider so it can read theme safely */
+function ThemedToastMount() {
+  const { colors } = useTheme();
+  const toastConfig = useMemo(() => createToastConfig(colors), [colors]);
+  return <Toast config={toastConfig} />;
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <UserProvider>
-        <ThemeProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <UserProvider>
           <AuthGate />
-          <Toast />
-        </ThemeProvider>
-      </UserProvider>
-    </AuthProvider>
+          <ThemedToastMount />
+        </UserProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -16,10 +17,14 @@ import * as ImagePicker from 'expo-image-picker';
 
 type ProfileUpdaterProps = {
   handleNavButtons: (btn: 'updater') => void;
+  sheetBusy?: boolean;
+  isOpen?: boolean;
 };
 
 const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
   handleNavButtons,
+  sheetBusy = false,
+  isOpen = false,
 }) => {
   const { colors } = useTheme();
   const { user, updateUser, updateProfilePic } = useUser();
@@ -30,6 +35,8 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
   );
   const [saving, setSaving] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
+
+  const [forceHidden, setForceHidden] = React.useState(true);
 
   async function uploadToCloudinary(uri: string): Promise<string> {
     const file = { uri, type: 'image/jpeg', name: 'avatar.jpg' } as any;
@@ -105,14 +112,34 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
     }
   };
 
+  const HIDE_MS = 260;
+
+  const hideTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+
+    if (isOpen) {
+      setForceHidden(true);
+      hideTimer.current = setTimeout(() => setForceHidden(false), HIDE_MS);
+    } else {
+      setForceHidden(true);
+    }
+
+    return () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, [isOpen]);
+
+  const isHidden = forceHidden || sheetBusy || !isOpen;
   return (
     <View
       style={{
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'transparent',
         position: 'absolute',
-        top: 100,
+        top: 0,
         marginHorizontal: 'auto',
-        height: '80%',
+        height: '100%',
         width: '100%',
       }}
     >
@@ -121,7 +148,7 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
           styles.container,
           {
             backgroundColor: colors.surface,
-            height: '90%',
+            height: '100%',
             marginTop: 100,
           },
         ]}
@@ -149,7 +176,7 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
               <Ionicons
                 name="pencil-outline"
                 size={20}
-                color={colors.text}
+                color="white"
                 style={{ position: 'absolute', left: 90, top: 85, zIndex: 2 }}
               />
             </View>
@@ -291,12 +318,12 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
           </View>
         </View>
       </View>
-      <TouchableOpacity
+      <Pressable
         style={[
           {
             backgroundColor: colors.primary,
             position: 'absolute',
-            top: -40,
+            top: -26,
             right: 23,
             width: 34,
             height: 27,
@@ -304,9 +331,12 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 7,
+            opacity: isHidden ? 0 : 1,
           },
         ]}
         onPress={() => handleNavButtons('updater')}
+        disabled={isHidden}
+        pointerEvents={isHidden ? 'none' : 'auto'}
       >
         <Text style={{ padding: 0 }}>
           <Ionicons
@@ -316,7 +346,7 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
             style={{ padding: 0 }}
           />
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 };

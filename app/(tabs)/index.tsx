@@ -2,8 +2,6 @@ import useTheme from '@/hooks/useTheme';
 import { useRouter } from 'expo-router';
 import React from 'react';
 
-import { useTodos } from '../../context/TodoContextProvider';
-
 import {
   ScrollView,
   StyleSheet,
@@ -11,6 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { useTodos } from '../../context/TodoContextProvider';
 
 import Loading from '../components/loading';
 import TodoEditor from '../components/TodoEditor';
@@ -30,7 +30,7 @@ export default function Index() {
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
   const [redirecting, setRedirecting] = React.useState(true);
 
-  const { todos, setTodos, toggleComplete } = useTodos();
+  const { todos, toggleComplete } = useTodos();
 
   const router = useRouter();
 
@@ -43,13 +43,14 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleTodoClick = () => {
-    setSelectedTodo(null);
-    setIsTodoOpen(true);
-  };
-
-  const handleTodoEdit = () => {
-    setIsEditOpen(true);
+  const handleButtonPress = (button: string) => {
+    if (button === 'add') {
+      setSelectedTodo(null);
+      setIsTodoOpen(true);
+    }
+    if (button === 'edit') {
+      setIsEditOpen(true);
+    }
   };
 
   const handleClose = () => {
@@ -170,7 +171,7 @@ export default function Index() {
       <View style={[styles.todoButtons]}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={handleTodoClick}
+          onPress={() => handleButtonPress('add')}
         >
           <Text style={[styles.buttonText, { color: colors.surface }]}>
             + Add Goal
@@ -179,7 +180,7 @@ export default function Index() {
         {todos.length > 0 && (
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.primary }]}
-            onPress={handleTodoEdit}
+            onPress={() => handleButtonPress('edit')}
           >
             <Text style={[styles.buttonText, { color: colors.surface }]}>
               Edit Goal

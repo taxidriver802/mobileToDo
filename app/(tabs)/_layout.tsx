@@ -13,7 +13,7 @@ import { bootstrapSession } from '@/api/auth';
 
 const TabsLayout = () => {
   const { colors } = useTheme();
-  const { isLogin, setIsLogin } = useAuth();
+  const { setIsLogin } = useAuth();
   const { setUser } = useUser();
   const [todos] = useState<Todo[]>([]);
 
@@ -58,8 +58,6 @@ const TabsLayout = () => {
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="flash-outline" size={size} color={color} />
               ),
-              // Hide Goals tab if not logged in
-              href: isLogin ? './' : undefined,
             }}
             initialParams={{ todos }}
           />
@@ -71,8 +69,6 @@ const TabsLayout = () => {
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="home" size={size} color={color} />
               ),
-              // Hide Home tab if not logged in
-              href: isLogin ? '/home' : null,
             }}
             initialParams={{ todos }}
           />
@@ -80,13 +76,9 @@ const TabsLayout = () => {
           <Tabs.Screen
             name="profile"
             options={{
-              title: isLogin ? 'Profile' : 'Login',
+              title: 'Profile',
               tabBarIcon: ({ color, size }) => (
-                <Ionicons
-                  name={isLogin ? 'person' : 'log-in'}
-                  size={size}
-                  color={color}
-                />
+                <Ionicons name={'person'} size={size} color={color} />
               ),
             }}
           />
