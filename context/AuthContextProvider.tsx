@@ -6,8 +6,9 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { getToken, setApiBaseUrl } from '../api/auth';
+import { clearApiBaseUrl, getToken, setApiBaseUrl } from '../api/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { USE_NGROK } from '@/api/env';
 
 interface AuthContextType {
   isLogin: boolean;
@@ -55,12 +56,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const keys = await AsyncStorage.getAllKeys();
     const result = await AsyncStorage.multiGet(keys);
   };
-  // During development you can point the app to a public tunnel (ngrok)
-  // so Expo Tunnel or LAN issues don't block requests. Replace the
-  // URL below with your current ngrok forwarding URL.
+
   useEffect(() => {
-    if (__DEV__) {
+    if (USE_NGROK) {
       setApiBaseUrl('https://unusuriously-interlocutory-dann.ngrok-free.dev');
+    } else {
+      clearApiBaseUrl();
     }
 
     checkStorage();
@@ -68,7 +69,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Clear token from storage
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
       setIsLogin(false);

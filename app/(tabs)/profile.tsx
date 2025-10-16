@@ -82,7 +82,14 @@ export default function Profile() {
         { backgroundColor: colors.bg, justifyContent: 'space-between' },
       ]}
     >
-      <View style={{ width: '100%' }}>
+      <View
+        style={{
+          width: '100%',
+          borderColor: colors.textMuted,
+          borderBottomWidth: 2,
+          flexDirection: 'column',
+        }}
+      >
         <Text
           style={[
             styles.title,
@@ -91,42 +98,82 @@ export default function Profile() {
           ]}
         >
           {/* Profile */}
-          {/* {isLogin ? (useUserName ? user?.fullName : user?.username) : null} */}
           Profile
         </Text>
+
         <View
           style={{
-            marginTop: 50,
-            borderColor: colors.textMuted,
-            borderBottomWidth: 2,
+            marginTop: 10,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            backgroundColor: colors.surface,
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            shadowOpacity: 0.75,
+            shadowRadius: 3.84,
           }}
         >
-          {user?.profilePic !== 'default.jpg' ? (
-            <Image
-              source={
-                user?.profilePic
-                  ? { uri: user.profilePic }
-                  : require('../../assets/images/profilePhoto.jpg') // fallback
-              }
-              style={{
-                width: 200,
-                height: 200,
-                borderRadius: 100,
-                alignSelf: 'center',
-              }}
-            />
-          ) : (
-            <Ionicons
-              name="person-circle-outline"
-              size={200}
-              color={colors.text}
-              style={{ alignSelf: 'center' }}
-            />
-          )}
+          <View style={{ flexDirection: 'row' }}>
+            {user?.profilePic !== 'default.jpg' ? (
+              <Image
+                source={
+                  user?.profilePic
+                    ? { uri: user.profilePic }
+                    : require('../../assets/images/profilePhoto.jpg') // fallback
+                }
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 100,
+                  margin: 10,
+                }}
+              />
+            ) : (
+              <Ionicons
+                name="person-circle-outline"
+                size={100}
+                color={colors.textMuted}
+              />
+            )}
 
-          <Text style={[styles.title, { color: colors.text, marginTop: 20 }]}>
-            {isLogin ? (useUserName ? user?.fullName : user?.username) : null}
-          </Text>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: colors.text,
+                  paddingTop: 75,
+                  textAlign: 'left',
+                  maxWidth: 200,
+                },
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {isLogin ? (useUserName ? user?.fullName : user?.username) : null}
+            </Text>
+          </View>
+          {streak >= 1 && (
+            <View
+              style={{
+                alignSelf: 'center',
+
+                marginRight: 10,
+              }}
+            >
+              <Ionicons name="star-outline" size={70} color={colors.primary} />
+              <Text
+                style={{
+                  fontSize: 20,
+                  color: colors.text,
+                  position: 'absolute',
+                  right: 32,
+                  top: 26,
+                }}
+              >
+                {streak}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 

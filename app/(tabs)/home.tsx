@@ -112,6 +112,11 @@ export default function Home() {
             </View>
           )}
 
+
+
+
+          
+
           <View style={{ marginTop: 'auto' }}>
             <ProgressBar
               progress={progress}

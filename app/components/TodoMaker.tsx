@@ -2,9 +2,7 @@ import useTheme from '@/hooks/useTheme';
 import React from 'react';
 import {
   Alert,
-  Animated,
   Keyboard,
-  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +16,9 @@ import { useTodos } from '../../context/TodoContextProvider';
 
 import { createGoal, updateGoalResetCompletion } from '@/api/goals';
 
+import { Freq } from '../(tabs)/index';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 interface TodoMakerProps {
   setIsTodoOpen: (isOpen: boolean) => void;
   todoToEdit?: Todo | null;
@@ -26,61 +27,71 @@ interface TodoMakerProps {
   handleClose?: () => void;
 }
 
-const FloatingLabelInput = ({
+const Field = ({
   label,
   value,
   onChangeText,
   placeholder,
   multiline = false,
+  required = false,
+  maxLength,
 }: {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
-  placeholder: string;
+  placeholder?: string;
   multiline?: boolean;
+  required?: boolean;
+  maxLength?: number;
 }) => {
   const { colors } = useTheme();
-  const fadeAnim = React.useRef(new Animated.Value(value ? 1 : 0)).current;
-
-  React.useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: value.length > 0 ? 1 : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [value]);
+  const [focused, setFocused] = React.useState(false);
 
   return (
-    <View style={[styles.input, { marginVertical: 12 }]}>
-      {value.length > 0 && (
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <Text style={{ color: colors.text, fontSize: 16 }}>{label}</Text>
-        </Animated.View>
-      )}
+    <View style={{ width: '100%', marginVertical: 12 }}>
+      <Text style={{ color: colors.text, fontSize: 14, marginBottom: 6 }}>
+        {label}
+        {required ? ' *' : ''}
+      </Text>
       <View
         style={{
           borderWidth: 1,
-          borderColor: colors.text,
+          borderColor: focused ? colors.primary : colors.text,
           borderRadius: 6,
-          backgroundColor: colors.bg,
+          backgroundColor: colors.surface,
           paddingHorizontal: 10,
-          paddingVertical: 6,
-          marginVertical: multiline ? 12 : 0,
+          paddingVertical: multiline ? 8 : 6,
         }}
       >
         <TextInput
-          placeholder={placeholder}
-          placeholderTextColor={colors.text + '99'}
           value={value}
           onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.text + '99'}
           multiline={multiline}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          maxLength={maxLength}
           style={{
             color: colors.text,
             fontSize: 16,
-            minHeight: multiline ? 75 : 32,
+            height: multiline ? 255 : 35,
+            textAlignVertical: multiline ? 'top' : 'center',
           }}
         />
       </View>
+      {maxLength && (
+        <Text
+          style={{
+            color: colors.text + '99',
+            fontSize: 12,
+            alignSelf: 'flex-end',
+            marginTop: 4,
+          }}
+        >
+          {value.length}/{maxLength}
+        </Text>
+      )}
     </View>
   );
 };
@@ -90,11 +101,13 @@ const goalToTodo = (g: {
   title: string;
   description: string;
   completed: boolean;
+  frequency: Freq;
 }) => ({
   id: g._id,
   title: g.title,
   description: g.description,
   completed: g.completed ?? false,
+  frequency: g.frequency,
 });
 
 const TodoMaker = ({
@@ -103,15 +116,19 @@ const TodoMaker = ({
   setSelectedTodo,
 }: TodoMakerProps) => {
   const { colors } = useTheme();
-  const { todos, setTodos } = useTodos();
+  const { setTodos } = useTodos();
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
+  const [choice, setChoice] = React.useState<'daily' | 'weekly' | 'monthly'>(
+    () => 'daily'
+  );
 
   React.useEffect(() => {
     if (todoToEdit) {
       setTitle(todoToEdit.title);
       setDescription(todoToEdit.description);
+      setChoice(todoToEdit.frequency);
     } else {
       setTitle('');
       setDescription('');
@@ -123,25 +140,11 @@ const TodoMaker = ({
     const hasDescription = !!description.trim();
 
     if (!hasTitle && !hasDescription) {
-      Alert.alert(
-        'Empty Todo',
-        'Your todo is empty',
-        [{ text: 'Close', style: 'cancel' }],
-        {
-          cancelable: true,
-        }
-      );
+      Alert.alert('Empty Todo', 'Your todo is empty');
       return;
     }
     if (!hasTitle) {
-      Alert.alert(
-        'Empty Title',
-        'Your todo needs a title',
-        [{ text: 'Close', style: 'cancel' }],
-        {
-          cancelable: true,
-        }
-      );
+      Alert.alert('Empty Title', 'Your todo needs a title');
       return;
     }
 
@@ -149,27 +152,29 @@ const TodoMaker = ({
       setSubmitting(true);
 
       if (todoToEdit) {
-        // UPDATE on server
+        // UPDATE goal
         const updatedGoal = await updateGoalResetCompletion(todoToEdit.id, {
           title: title.trim(),
           description: description.trim(),
+          frequency: choice,
         });
 
         const updatedTodo = goalToTodo(updatedGoal);
-        // update local state
         setTodos(prev =>
           prev.map(t => (t.id === todoToEdit.id ? updatedTodo : t))
         );
         setSelectedTodo?.(null);
       } else {
-        // CREATE on server
+        // CREATE goal
+
         const createdGoal = await createGoal({
           title: title.trim(),
           description: description.trim(),
+          frequency: choice,
         });
 
         const newTodo = goalToTodo(createdGoal);
-        setTodos(prev => [...prev, newTodo]); // append to local list
+        setTodos(prev => [newTodo, ...prev]);
       }
 
       setTitle('');
@@ -183,60 +188,157 @@ const TodoMaker = ({
     }
   };
 
+  React.useEffect(() => {
+    console.log(choice);
+  }, [choice]);
+
   return (
-    <Modal transparent>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.container, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {todoToEdit ? 'Edit goal' : 'Add a goal'}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          marginHorizontal: 'auto',
+          height: '100%',
+          width: '100%',
+        }}
+      >
+        <View
+          style={[
+            styles.container,
+            {
+              backgroundColor: colors.bg,
+              height: '90%',
+              marginTop: 100,
+            },
+          ]}
+        >
+          <Text style={[styles.title, { color: colors.text }]}>
+            {todoToEdit ? 'Edit goal' : 'Add a goal'}
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              {
+                backgroundColor: colors.primary,
+                position: 'absolute',
+                top: -40,
+                right: 13,
+                width: 34,
+                height: 27,
+                padding: 0,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 7,
+              },
+            ]}
+            onPress={handleClose}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          >
+            <Text style={[styles.buttonText, { color: colors.surface }]}>
+              <Ionicons
+                name="close"
+                size={15}
+                color={colors.surface}
+                style={{ padding: 0 }}
+              />
             </Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.close, { backgroundColor: colors.primary }]}
-              onPress={handleClose}
-              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-            >
-              <Text style={[styles.buttonText, { color: colors.surface }]}>
-                X
+          <View style={{ height: '100%', justifyContent: 'space-between' }}>
+            <View>
+              <Field
+                label="Title"
+                value={title}
+                onChangeText={setTitle}
+                placeholder="E.g., Read 10 pages"
+                required
+                maxLength={50}
+              />
+              <Field
+                label="Description"
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Add more details..."
+                multiline
+                maxLength={250}
+              />
+            </View>
+            <View>
+              <Text
+                style={{
+                  color: colors.text,
+                  marginBottom: 5,
+                }}
+              >
+                Goal Frequency
               </Text>
-            </TouchableOpacity>
 
-            <View style={{ height: 395, justifyContent: 'space-between' }}>
-              <View>
-                <FloatingLabelInput
-                  label="Title:"
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder="Title:"
-                />
-                <FloatingLabelInput
-                  label="Description:"
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Description:"
-                  multiline
-                />
+              <View
+                style={[
+                  styles.segment,
+                  {
+                    borderColor: colors.textMuted,
+                    marginBottom: 20,
+                  },
+                ]}
+              >
+                {(['daily', 'weekly', 'monthly'] as const).map(opt => {
+                  const active = choice === opt;
+                  return (
+                    <TouchableOpacity
+                      key={opt}
+                      onPress={() => setChoice(opt)}
+                      style={[
+                        styles.segmentBtn,
+                        {
+                          backgroundColor: active
+                            ? colors.primary
+                            : 'transparent',
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color: active ? colors.surface : colors.text,
+                          fontWeight: active
+                            ? ('700' as const)
+                            : ('500' as const),
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {opt}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
               <TouchableOpacity
-                style={[styles.button, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: colors.primary,
+                    marginBottom: 50,
+                    marginTop: 10,
+                  },
+                ]}
                 onPress={handleSubmit}
+                disabled={submitting}
               >
                 <Text style={[styles.buttonText, { color: colors.surface }]}>
-                  Submit
+                  {submitting ? 'Saving…' : 'Submit'}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  input: { width: 250 },
   container: {
     padding: 25,
     borderRadius: 8,
@@ -245,9 +347,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.75,
     shadowRadius: 3.84,
-    height: 475,
+    height: 'auto',
   },
-  inputDesc: { maxHeight: 400 },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.3)',
@@ -268,6 +369,19 @@ const styles = StyleSheet.create({
   },
   buttonText: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
   close: { width: 25, position: 'absolute', top: 5, right: 5, borderRadius: 7 },
+  segment: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingVertical: 1,
+    justifyContent: 'space-around',
+  },
+  segmentBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginHorizontal: 2,
+  },
 });
 
 export default TodoMaker;

@@ -5,7 +5,7 @@ import { decode as base64decode } from 'base-64';
 import { router } from 'expo-router';
 
 const API_PORT = 5001;
-const LAN_HOST = '10.0.0.181';
+const LAN_HOST = '10.0.0.166';
 
 export type AuthHydrateResult =
   | { ok: true; token: string; user: any }
@@ -31,13 +31,7 @@ function setUserInMemory(user: any | null) {
   authState.user = user;
 }
 
-/** ---- API base resolution ---- */
-function getApiUrl() {
-  if (Platform.OS === 'android') return `http://10.0.2.2:${API_PORT}/api`;
-  if (Platform.OS === 'ios') return `http://localhost:${API_PORT}/api`;
-  return `http://${LAN_HOST}:${API_PORT}/api`;
-}
-export const API_URL = getApiUrl();
+export const API_URL = 'http://10.0.0.166:5001';
 
 const CANDIDATE_BASES = [
   `http://localhost:${API_PORT}`,
@@ -190,7 +184,11 @@ export async function register(
       signal: controller.signal,
     });
 
+    console.log('res', res);
+
     const data = await res.json();
+
+    console.log('data', data);
 
     if (!res.ok) {
       if (res.status === 409) {
@@ -282,7 +280,7 @@ export async function login(username: string, password: string) {
     return data;
   } catch (err: any) {
     console.error('[auth.login] error ->', err?.message || String(err));
-    if (
+    /* if (
       err?.name === 'AbortError' ||
       err?.message === 'The user aborted a request.'
     ) {
@@ -298,7 +296,7 @@ export async function login(username: string, password: string) {
         'Network request failed. Check that your API base is reachable from this device/emulator.'
       );
     }
-    throw err;
+    throw err; */
   } finally {
     clearTimeout(timeout);
   }
@@ -380,8 +378,6 @@ const isJwtExpired = (token: string) => {
     return true; // bad token -> treat as expired
   }
 };
-
-
 
 export async function bootstrapAuth() {
   // Lightweight boot that just ensures we land in the right screen.

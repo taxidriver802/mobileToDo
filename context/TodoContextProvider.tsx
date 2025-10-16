@@ -11,11 +11,14 @@ import {
   type Goal,
 } from '@/api/goals';
 
+import { Freq } from '@/app/(tabs)';
+
 export type Todo = {
   id: string;
   title: string;
   description: string;
   completed?: boolean;
+  frequency: Freq;
 };
 
 export type CompletionHistory = {
@@ -29,7 +32,11 @@ type TodosContextType = {
   completionHistory: CompletionHistory;
   isLoading: boolean;
   refresh: () => Promise<void>;
-  addTodo: (title: string, description: string) => Promise<void>;
+  addTodo: (
+    title: string,
+    description: string,
+    frequency: Freq
+  ) => Promise<void>;
   toggleComplete: (id: string, completed: boolean) => Promise<void>;
   editTodo: (
     id: string,
@@ -45,6 +52,7 @@ const fromGoal = (g: Goal): Todo => ({
   title: g.title,
   description: g.description,
   completed: !!g.completed,
+  frequency: g.frequency,
 });
 
 const toCache = (todos: Todo[]) =>
@@ -81,8 +89,8 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   }, [isLogin]);
 
   const addTodo = React.useCallback(
-    async (title: string, description: string) => {
-      const created = await createGoal({ title, description });
+    async (title: string, description: string, frequency: Freq) => {
+      const created = await createGoal({ title, description, frequency });
       const mapped = fromGoal(created);
       setTodos(prev => [mapped, ...prev]);
       await toCache([mapped, ...todos]);

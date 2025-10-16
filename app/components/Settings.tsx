@@ -97,7 +97,6 @@ const Settings: React.FC<SettingsProps> = ({
   return (
     <View
       style={{
-        /* backgroundColor: 'rgba(0,0,0,0.5)', */
         position: 'absolute',
         top: 0,
         marginHorizontal: 'auto',

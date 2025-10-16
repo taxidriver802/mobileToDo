@@ -1,10 +1,13 @@
 // app/api/goals.ts
 import { fetchWithAutoBase, getToken } from '@/api/auth';
 
+import { Freq } from '@/app/(tabs)';
+
 export type Goal = {
   _id: string;
   title: string;
   description: string;
+  frequency: Freq;
   completed: boolean;
   user: string;
   createdAt?: string;
@@ -45,6 +48,7 @@ export async function listGoals(): Promise<Goal[]> {
 export async function createGoal(input: {
   title: string;
   description: string;
+  frequency: Freq;
 }): Promise<Goal> {
   const res = await authed('/api/goals', {
     method: 'POST',
@@ -69,7 +73,7 @@ export async function updateGoal(
 /** Convenience if your business rule is: editing content resets completion */
 export async function updateGoalResetCompletion(
   id: string,
-  patch: Partial<Pick<Goal, 'title' | 'description'>>
+  patch: Partial<Pick<Goal, 'title' | 'description' | 'frequency'>>
 ): Promise<Goal> {
   return updateGoal(id, { ...patch, completed: false });
 }

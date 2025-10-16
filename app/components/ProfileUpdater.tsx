@@ -147,7 +147,7 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
         style={[
           styles.container,
           {
-            backgroundColor: colors.surface,
+            backgroundColor: colors.bg,
             height: '100%',
             marginTop: 100,
           },

@@ -1,58 +1,36 @@
 import useTheme from '@/hooks/useTheme';
-import React, { useEffect, useRef } from 'react';
-import { Alert, Animated, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { useTodos } from '../../context/TodoContextProvider';
 import type { Todo } from '../(tabs)/index';
 
 interface TodoCardProps {
   todo: Todo;
-  /** Optional override: if provided, we'll call this instead of context.toggleComplete */
   onToggleComplete?: () => Promise<void> | void;
 }
 
 export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
   const { colors } = useTheme();
-  const { toggleComplete } = useTodos(); // <-- use provider, not setTodos
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const mountedRef = useRef(true);
+  const { toggleComplete, todos } = useTodos();
 
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  const handleToggle = () => {
-    // Fade out first for a snappy UI
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(async () => {
-      try {
-        // Use the prop if provided (e.g., Home passes its own), otherwise call context
-        const maybePromise =
-          onToggleComplete?.() ??
-          toggleComplete(todo.id, !(todo.completed ?? false));
-        await Promise.resolve(maybePromise);
-      } catch (e: any) {
-        // On error, bring it back and notify
-        if (mountedRef.current) fadeAnim.setValue(1);
-        Alert.alert('Update failed', e?.message ?? 'Could not update goal.');
-        return;
-      }
-
-      // If this card is still on screen (e.g., on a list that keeps completed items),
-      // reset opacity to 1 so it’s visible. If it was removed (active list), this is a no-op.
-      if (mountedRef.current) fadeAnim.setValue(1);
-    });
+  const handleToggle = async () => {
+    try {
+      const maybePromise =
+        onToggleComplete?.() ??
+        toggleComplete(todo.id, !(todo.completed ?? false));
+      await Promise.resolve(maybePromise);
+    } catch (e: any) {
+      Alert.alert('Update failed', e?.message ?? 'Could not update goal.');
+    }
   };
 
+  const areGoalsCompleted = todos.every(todo => todo.completed);
+
   return (
-    <Animated.View
+    <View
       style={{
-        opacity: fadeAnim,
         backgroundColor: colors.surface,
+        opacity: areGoalsCompleted ? 0.75 : 1,
         borderRadius: 8,
         padding: 16,
         marginVertical: 6,
@@ -73,6 +51,9 @@ export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
             fontSize: 18,
             fontWeight: 'bold',
             marginBottom: 4,
+            paddingBottom: 4,
+            borderBottomWidth: 2,
+            borderColor: colors.border,
             width: 235,
           }}
         >
@@ -99,6 +80,7 @@ export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
           justifyContent: 'flex-end',
           marginTop: 10,
         }}
+        disabled={areGoalsCompleted}
       >
         <View
           style={{
@@ -124,6 +106,6 @@ export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
           )}
         </View>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 }

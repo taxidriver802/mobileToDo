@@ -15,12 +15,17 @@ import { useTodos } from '../../context/TodoContextProvider';
 import Loading from '../components/loading';
 import TodoEditor from '../components/TodoEditor';
 import TodoMaker from '../components/TodoMaker';
+import TodoCard from '../components/TodoCard';
+import SlideUpSheet from '../components/slideUpSheet';
+
+export type Freq = 'daily' | 'weekly' | 'monthly';
 
 export interface Todo {
   title: string;
   description: string;
   completed?: boolean;
   id: string;
+  frequency: Freq;
 }
 
 export default function Index() {
@@ -33,6 +38,10 @@ export default function Index() {
   const { todos, toggleComplete } = useTodos();
 
   const router = useRouter();
+
+  const [filter, setFilter] = React.useState<'daily' | 'weekly' | 'monthly'>(
+    () => 'daily'
+  );
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,11 +68,14 @@ export default function Index() {
     setSelectedTodo(null);
   };
 
+  // normalize frequency and filter strictly
+  const filteredGoals = todos.filter(
+    t => ((t.frequency ?? 'daily') as string).toLowerCase() === filter
+  );
+
   if (redirecting) {
     return <Loading />;
   }
-
-  const areGoalsCompleted = todos.every(todo => todo.completed);
 
   return (
     <View
@@ -75,99 +87,66 @@ export default function Index() {
             styles.content,
             styles.todayTitle,
             { color: colors.text },
-            { marginTop: 30, fontSize: 27 },
+            { marginTop: 41, fontSize: 27 },
           ]}
         >
           Your Goals
         </Text>
       </View>
 
-      <View style={styles.todosWrapper}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View
+          style={[
+            styles.segment,
+            {
+              borderColor: colors.border,
+              transform: [{ translateY: -10 }],
+            },
+          ]}
+        >
+          {(['daily', 'weekly', 'monthly'] as const).map(opt => {
+            const active = filter === opt;
+            return (
+              <TouchableOpacity
+                key={opt}
+                onPress={() => setFilter(opt)}
+                style={[
+                  styles.segmentBtn,
+                  {
+                    backgroundColor: active ? colors.primary : 'transparent',
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: active ? colors.surface : colors.text,
+                    fontWeight: active ? ('700' as const) : ('500' as const),
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {opt}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={[styles.todosWrapper]}>
         <ScrollView
           style={styles.todosScrollView}
           showsVerticalScrollIndicator={false}
         >
-          {todos.length === 0 && (
-            <Text style={[styles.content, { color: colors.text }]}>
-              Press "+ Add Goal" below
-            </Text>
-          )}
-          {todos.length > 0 &&
-            todos.map((todo, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.todoContainer,
-                  {
-                    backgroundColor: colors.surface,
-                    opacity: areGoalsCompleted ? 0.5 : 1,
-                    borderRadius: 8,
-                    padding: 16,
-                    marginVertical: 6,
-                    width: 300,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 2,
-                    elevation: 1,
-                  },
-                ]}
-              >
-                <View style={{ justifyContent: 'center' }}>
-                  <Text
-                    style={{
-                      color: colors.text,
-                      fontSize: 18,
-                      fontWeight: 'bold',
-                      marginBottom: 4,
-                      width: 235,
-                    }}
-                  >
-                    {todo.title}
-                  </Text>
-                  {todo.description ? (
-                    <Text
-                      style={{
-                        color: colors.text,
-                        opacity: 0.7,
-                        fontSize: 15,
-                        width: 235,
-                      }}
-                    >
-                      {todo.description}
-                    </Text>
-                  ) : null}
-                </View>
-                <TouchableOpacity
-                  onPress={() => toggleComplete(todo.id, !todo.completed)}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    borderWidth: 2,
-                    borderColor: todo.completed ? 'green' : colors.text,
-                    backgroundColor: todo.completed ? 'green' : 'transparent',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginTop: 10,
-                  }}
-                  disabled={areGoalsCompleted} // keep your streak rule if desired
-                >
-                  {todo.completed && (
-                    <View
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: 6,
-                        backgroundColor: '#fff',
-                      }}
-                    />
-                  )}
-                </TouchableOpacity>
-              </View>
-            ))}
+          {filteredGoals.map(todo => (
+            <TodoCard
+              key={todo.id}
+              todo={todo}
+              onToggleComplete={() => toggleComplete(todo.id, !todo.completed)}
+            />
+          ))}
         </ScrollView>
       </View>
+
       <View style={[styles.todoButtons]}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.primary }]}
@@ -188,7 +167,15 @@ export default function Index() {
           </TouchableOpacity>
         )}
       </View>
-      {isTodoOpen ? (
+
+      <SlideUpSheet
+        open={isTodoOpen}
+        onClose={() => setIsTodoOpen(false)}
+        heightPct={0.9}
+        withBackdrop
+        backdropOpacity={0.35}
+        sheetStyle={{ backgroundColor: colors.surface }}
+      >
         <TodoMaker
           setIsTodoOpen={setIsTodoOpen}
           todoToEdit={selectedTodo}
@@ -196,15 +183,26 @@ export default function Index() {
           isOpen={isTodoOpen}
           handleClose={handleClose}
         />
-      ) : isEditOpen ? (
+      </SlideUpSheet>
+
+      <SlideUpSheet
+        open={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        heightPct={0.9}
+        withBackdrop
+        backdropOpacity={0.35}
+        sheetStyle={{ backgroundColor: colors.surface }}
+      >
         <TodoEditor
           setIsTodoOpen={setIsTodoOpen}
           setIsEditOpen={setIsEditOpen}
           setSelectedTodo={setSelectedTodo}
           isOpen={isEditOpen}
           handleClose={handleClose}
+          filteredGoals={filteredGoals}
+          filter={filter}
         />
-      ) : null}
+      </SlideUpSheet>
     </View>
   );
 }
@@ -269,5 +267,19 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     borderBottomWidth: 1,
     width: '100%',
+  },
+  text: { fontSize: 16, fontWeight: '500' },
+  segment: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 1,
+    alignSelf: 'flex-start',
+  },
+  segmentBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    marginHorizontal: 2,
   },
 });

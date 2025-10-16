@@ -18,9 +18,10 @@ interface TodoEditorProps {
   isOpen: boolean;
   setIsEditOpen: (isOpen: boolean) => void;
   setIsTodoOpen: (isOpen: boolean) => void;
-
   setSelectedTodo: (todo: Todo | null) => void;
   handleClose?: () => void;
+  filteredGoals: Todo[];
+  filter: string;
 }
 
 const TodoEditor = ({
@@ -28,13 +29,11 @@ const TodoEditor = ({
   setIsEditOpen,
   setSelectedTodo,
   handleClose,
+  filteredGoals,
+  filter,
 }: TodoEditorProps) => {
   const { colors } = useTheme();
-  const { todos, setTodos } = useTodos();
-
-  const handleDelete = (id: string) => {
-    setTodos(prev => prev.filter(t => t.id !== id));
-  };
+  const { removeTodo } = useTodos();
 
   const handleDeleteClick = (id: string) => {
     Alert.alert(
@@ -42,7 +41,13 @@ const TodoEditor = ({
       'Are you sure you want to delete this todo?',
       [
         { text: 'No', style: 'cancel' },
-        { text: 'Yes', style: 'destructive', onPress: () => handleDelete(id) },
+        {
+          text: 'Yes',
+          style: 'destructive',
+          onPress: async () => {
+            await removeTodo(id);
+          },
+        },
       ],
       { cancelable: true }
     );
@@ -54,6 +59,9 @@ const TodoEditor = ({
     setIsTodoOpen(true);
   };
 
+  const filterTitle =
+    filter.charAt(0).toUpperCase() + filter.slice(1).toLowerCase();
+
   return (
     <Modal transparent>
       <View style={styles.modalOverlay}>
@@ -64,7 +72,7 @@ const TodoEditor = ({
               { color: colors.text, alignSelf: 'center', marginBottom: 5 },
             ]}
           >
-            Edit your goals
+            {filterTitle} goals
           </Text>
 
           <TouchableOpacity
@@ -81,11 +89,11 @@ const TodoEditor = ({
             style={{ maxHeight: 400 }}
             showsVerticalScrollIndicator={false}
           >
-            {todos.map(todo => (
+            {filteredGoals.map(todo => (
               <TouchableOpacity
                 key={todo.id}
                 style={styles.todoDelContainer}
-                onPress={() => handleEdit(todo)} // This now works correctly
+                onPress={() => handleEdit(todo)}
                 activeOpacity={0.7}
               >
                 <Text
@@ -104,7 +112,8 @@ const TodoEditor = ({
                   <Ionicons
                     name="trash-outline"
                     size={24}
-                    color={colors.text}
+                    color={colors.primary}
+                    style={{ color: colors.textMuted }}
                   />
                 </TouchableOpacity>
               </TouchableOpacity>
