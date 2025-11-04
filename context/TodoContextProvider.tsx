@@ -1,11 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContextProvider';
 import {
@@ -21,6 +15,15 @@ import { fetchWithAutoBase, getToken } from '@/api/auth';
 import useTheme from '@/hooks/useTheme';
 import { Freq } from '@/app/(tabs)';
 import { showCustom, showError, showSuccess } from '@/app/utils/toast';
+
+const isLiveForDate = (t: Todo, _date = new Date()) => t.frequency === 'daily';
+
+/* React.useEffect(() => {
+  (async () => {
+    await AsyncStorage.clear();
+    console.log('All AsyncStorage cleared.');
+  })();
+}, []); */
 
 function toYyyyMmDd(date = new Date()) {
   const y = date.getFullYear();
@@ -98,6 +101,9 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   const [completionHistory, setCompletionHistory] = useState<CompletionHistory>(
     {}
   );
+  const [hydrated, setHydrated] = useState(false);
+  const [serverStreakLoaded, setServerStreakLoaded] = useState(false);
+
   const { colors } = useTheme();
   const { isLogin } = useAuth();
 
@@ -122,10 +128,13 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
     async (title: string, description: string, frequency: Freq) => {
       const created = await createGoal({ title, description, frequency });
       const mapped = fromGoal(created);
-      setTodos(prev => [mapped, ...prev]);
-      await toCache([mapped, ...todos]);
+      setTodos(prev => {
+        const next = [mapped, ...prev];
+        toCache(next);
+        return next;
+      });
     },
-    [todos]
+    []
   );
 
   const toggleComplete = React.useCallback(
@@ -161,20 +170,23 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
     async (id: string, patch: { title?: string; description?: string }) => {
       const updated = await updateGoal(id, patch);
       const mapped = fromGoal(updated);
-      setTodos(prev => prev.map(t => (t.id === id ? mapped : t)));
-      await toCache(todos.map(t => (t.id === id ? mapped : t)));
+      setTodos(prev => {
+        const next = prev.map(t => (t.id === id ? mapped : t));
+        toCache(next);
+        return next;
+      });
     },
-    [todos]
+    []
   );
 
-  const removeTodo = React.useCallback(
-    async (id: string) => {
-      await deleteGoal(id);
-      setTodos(prev => prev.filter(t => t.id !== id));
-      await toCache(todos.filter(t => t.id !== id));
-    },
-    [todos]
-  );
+  const removeTodo = React.useCallback(async (id: string) => {
+    await deleteGoal(id);
+    setTodos(prev => {
+      const next = prev.filter(t => t.id !== id);
+      toCache(next);
+      return next;
+    });
+  }, []);
 
   // === Sync streak on load ===
   React.useEffect(() => {
@@ -183,6 +195,7 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       setStreak(0);
       setCompletionHistory({});
       setIsLoading(false);
+      setHydrated(false);
       return;
     }
 
@@ -197,38 +210,112 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       try {
         const res = await authFetch('/api/user/me/streak');
         if (res.ok) {
-          const data = await res.json();
-          if (typeof data.streak === 'number') setStreak(data.streak);
-          if (data.completionHistory)
+          const data = await res.json().catch(() => ({}));
+
+          const toISO = (v: any): string | null => {
+            if (!v) return null;
+            if (typeof v === 'string') {
+              if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+              const d = new Date(v);
+              if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+              return null;
+            }
+            if (v instanceof Date) return v.toISOString().slice(0, 10);
+            return null;
+          };
+
+          // 1) streak
+          if (typeof data.streak === 'number') {
+            console.log(data.streak);
+
+            setStreak(data.streak);
+            // keep local cache in sync (optional)
+            await AsyncStorage.setItem('streak', String(data.streak));
+          }
+
+          // 2) completion history
+          if (
+            data.completionHistory &&
+            typeof data.completionHistory === 'object'
+          ) {
             setCompletionHistory(data.completionHistory);
-          if (data.lastDailyCheckDate)
             await AsyncStorage.setItem(
-              'lastDailyCheckDate',
-              data.lastDailyCheckDate
+              'completionHistory',
+              JSON.stringify(data.completionHistory)
             );
-          if (data.streakIncreasedForDate)
-            await AsyncStorage.setItem(
-              'streakIncreasedForDate',
-              data.streakIncreasedForDate
-            );
+          } else {
+            // if server has none, clear local to avoid stale reads
+            await AsyncStorage.removeItem('completionHistory');
+          }
+
+          // 3) dates (normalize and only write if changed)
+          const serverLast = toISO(data.lastDailyCheckDate);
+          const serverInc = toISO(data.streakIncreasedForDate);
+
+          const [localLast, localInc] = await AsyncStorage.multiGet([
+            'lastDailyCheckDate',
+            'streakIncreasedForDate',
+          ]).then(entries => entries.map(([, v]) => v));
+
+          if (serverLast) {
+            if (localLast !== serverLast) {
+              await AsyncStorage.setItem('lastDailyCheckDate', serverLast);
+            }
+          } else if (localLast != null) {
+            await AsyncStorage.removeItem('lastDailyCheckDate');
+          }
+
+          if (serverInc) {
+            let valueToWrite = serverInc;
+
+            // === DEV OVERRIDE (optional, helpful for testing) ===
+            // If you want to be able to re-increment today during testing,
+            // uncomment this block: it clears the "increased today" marker locally.
+
+            // if (__DEV__) {
+            // const todayISO = new Date().toISOString().slice(0, 10);
+            // if (serverInc === todayISO) {
+            //   valueToWrite = '';
+            //  }
+            //  }
+
+            if (localInc !== valueToWrite) {
+              if (valueToWrite) {
+                await AsyncStorage.setItem(
+                  'streakIncreasedForDate',
+                  valueToWrite
+                );
+              } else {
+                await AsyncStorage.removeItem('streakIncreasedForDate');
+              }
+            }
+          } else if (localInc != null) {
+            await AsyncStorage.removeItem('streakIncreasedForDate');
+          }
+
+          setServerStreakLoaded(true);
         }
       } catch (err) {
-        console.warn('[streak.sync] failed to fetch streak:');
+        console.warn('[streak.sync] failed to fetch streak:', err);
       }
 
       await refresh();
+      setHydrated(true);
+      setIsLoading(false);
     })();
   }, [isLogin, refresh]);
 
   // === Daily reset ===
   React.useEffect(() => {
-    if (!isLogin) return;
+    if (!isLogin || !hydrated) return;
 
     const initializeAndCheckDailyReset = async () => {
-      const today = new Date().toDateString();
+      const today = toYyyyMmDd(new Date());
 
-      const storedStreak = await AsyncStorage.getItem('streak');
-      if (storedStreak) setStreak(parseInt(storedStreak, 10));
+      if (streak === 0 && !serverStreakLoaded) {
+        const storedStreak = await AsyncStorage.getItem('streak');
+        if (storedStreak) setStreak(parseInt(storedStreak, 10));
+      }
 
       const storedHistory = await AsyncStorage.getItem('completionHistory');
       if (storedHistory) setCompletionHistory(JSON.parse(storedHistory));
@@ -236,26 +323,35 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       const lastCheckDate = await AsyncStorage.getItem('lastDailyCheckDate');
 
       if (lastCheckDate && lastCheckDate !== today && todos.length > 0) {
-        const allWereCompleted = todos.every(t => !!t.completed);
+        const liveYesterday = todos.filter(t =>
+          isLiveForDate(t /*, yesterday*/)
+        );
+        const allWereCompleted =
+          liveYesterday.length > 0
+            ? liveYesterday.every(t => !!t.completed)
+            : null;
 
-        const newHistory = {
-          ...(storedHistory ? JSON.parse(storedHistory) : {}),
-          [lastCheckDate]: allWereCompleted,
-        };
+        const newHistoryObj = storedHistory ? JSON.parse(storedHistory) : {};
+        if (allWereCompleted !== null) {
+          newHistoryObj[lastCheckDate] = allWereCompleted;
+        }
+
+        const newHistory = newHistoryObj;
+
         setCompletionHistory(newHistory);
         await AsyncStorage.setItem(
           'completionHistory',
           JSON.stringify(newHistory)
         );
 
-        if (!allWereCompleted) {
+        if (allWereCompleted === false) {
           setStreak(0);
           await AsyncStorage.setItem('streak', '0');
 
           showError(
             'Oh no! Your streak was lost',
             `You didn't complete all tasks yesterday. Try again today!`,
-            { position: 'top' }
+            { position: 'top', visibilityTime: 5000 }
           );
         }
 
@@ -295,7 +391,7 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
     };
 
     initializeAndCheckDailyReset();
-  }, [isLogin, todos]);
+  }, [isLogin, hydrated, todos]);
 
   React.useEffect(() => {
     if (!isLogin) return;
@@ -305,58 +401,94 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
   }, [todos, isLogin]);
 
   // === When all todos completed ===
+  const prevAllCompletedRef = React.useRef(false);
+
   React.useEffect(() => {
     if (!isLogin || todos.length === 0) return;
-    const allCompleted = todos.every(todo => todo.completed);
-    if (!allCompleted) return;
+    const liveToday = todos.filter(t => isLiveForDate(t /*, today*/));
+    const allCompleted =
+      liveToday.length > 0 && liveToday.every(t => t.completed);
+
+    const wasCompleted = prevAllCompletedRef.current;
+    prevAllCompletedRef.current = allCompleted;
+    if (!allCompleted || wasCompleted) return;
 
     const checkAndIncreaseStreak = async () => {
-      const today = new Date().toDateString();
-      const streakIncreasedDate = await AsyncStorage.getItem(
-        'streakIncreasedForDate'
-      );
-      if (streakIncreasedDate !== today) {
-        const newStreak = streak + 1;
-        setStreak(newStreak);
-        await AsyncStorage.setItem('streak', newStreak.toString());
+      const today = toYyyyMmDd(new Date());
+      const already = await AsyncStorage.getItem('streakIncreasedForDate');
+      if (already === today) {
+        return showCustom(
+          'All Goals Completed!',
+          `Come back tomorrow to keep raising your streak!`,
+          { position: 'top', visibilityTime: 5000 },
+          { accentColor: colors.primary }
+        );
+      }
+
+      const optimistic = streak + 1;
+      setStreak(optimistic);
+
+      try {
+        const res = await authFetch('/api/user/me/streak/increment', {
+          method: 'POST',
+          body: JSON.stringify({ onDate: today }),
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          console.warn('[streak.increment] non-2xx', res.status, text);
+          // rollback local state and guard if server rejected
+          setStreak(streak);
+          return showCustom(
+            'All Goals Completed!',
+            `Couldn’t update your streak right now. Try again in a few seconds.`,
+            { position: 'top' }
+          );
+        }
+        const data = await res.json().catch(() => ({}));
+
+        if (typeof data.streak === 'number') {
+          setStreak(data.streak);
+          await AsyncStorage.setItem('streak', String(data.streak));
+        } else {
+          await AsyncStorage.setItem('streak', String(optimistic));
+        }
         await AsyncStorage.setItem('streakIncreasedForDate', today);
 
-        // sync with backend
-        try {
-          const res = await authFetch('/api/user/me/streak/increment', {
-            method: 'POST',
-            body: JSON.stringify({ onDate: toYyyyMmDd(new Date()) }),
+        const todayISO = today;
+        if (
+          data.completionHistory &&
+          typeof data.completionHistory === 'object'
+        ) {
+          const merged = { ...data.completionHistory, [todayISO]: true };
+          setCompletionHistory(merged);
+          await AsyncStorage.setItem(
+            'completionHistory',
+            JSON.stringify(merged)
+          );
+        } else {
+          setCompletionHistory(prev => {
+            const next = { ...(prev || {}), [todayISO]: true };
+            AsyncStorage.setItem(
+              'completionHistory',
+              JSON.stringify(next)
+            ).catch(() => {});
+            return next;
           });
-
-          if (!res.ok) {
-            const text = await res.text().catch(() => '');
-            console.warn('[streak.increment] non-2xx', res.status, text);
-          } else {
-            // (optional) trust server as source of truth
-            const data = await res.json();
-            if (typeof data.streak === 'number') {
-              setStreak(data.streak);
-              await AsyncStorage.setItem('streak', String(data.streak));
-            }
-          }
-        } catch (err) {
-          console.warn('[streak.increment sync failed]', err);
         }
 
         showSuccess(
           'Streak Increased!',
-          `You're now on a ${newStreak} day streak! 🎉`,
+          `You're now on a ${typeof data.streak === 'number' ? data.streak : optimistic} day streak! 🎉`,
           { position: 'top' }
         );
-      } else {
+      } catch (err) {
+        console.warn('[streak.increment sync failed]', err);
+        // rollback if you want strict correctness
+        setStreak(streak);
         showCustom(
           'All Goals Completed!',
-          `Come back tomorrow to keep raising your streak!`,
-          {
-            position: 'top',
-            visibilityTime: 5000,
-          },
-          { accentColor: colors.primary }
+          `Couldn’t update your streak right now. Try again in a few seconds.`,
+          { position: 'top' }
         );
       }
     };

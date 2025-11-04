@@ -133,6 +133,35 @@ export default function Index() {
     setSelectedTodo(null);
   };
 
+  const availableFilters = React.useMemo(() => {
+    const base = ['active', 'daily', 'weekly', 'monthly', 'completed'] as const;
+
+    return base.filter(opt => {
+      switch (opt) {
+        case 'active':
+          return todos.some(t => !t.completed);
+        case 'completed':
+          return todos.some(t => t.completed);
+        case 'daily':
+        case 'weekly':
+        case 'monthly':
+          // only show frequency tabs if they have UNCOMPLETED goals
+          return todos.some(t => t.frequency === opt && !t.completed);
+        default:
+          return true;
+      }
+    });
+  }, [todos]);
+
+  React.useEffect(() => {
+    if (
+      !availableFilters.includes(filter as any) &&
+      availableFilters.length > 0
+    ) {
+      setFilter(availableFilters[0]);
+    }
+  }, [availableFilters, filter, setFilter]);
+
   if (redirecting) {
     return <Loading />;
   }
@@ -154,18 +183,15 @@ export default function Index() {
         </Text>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <View
-          style={[
-            styles.segment,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-            },
-          ]}
-        >
-          {(['active', 'daily', 'weekly', 'monthly', 'completed'] as const).map(
-            opt => {
+      {todos.length >= 1 && availableFilters.length > 0 && (
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View
+            style={[
+              styles.segment,
+              { borderColor: colors.border, backgroundColor: colors.surface },
+            ]}
+          >
+            {availableFilters.map(opt => {
               const active = filter === opt;
               return (
                 <TouchableOpacity
@@ -189,10 +215,10 @@ export default function Index() {
                   </Text>
                 </TouchableOpacity>
               );
-            }
-          )}
+            })}
+          </View>
         </View>
-      </View>
+      )}
 
       <View style={[styles.todosWrapper]}>
         <ScrollView

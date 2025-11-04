@@ -188,10 +188,6 @@ const TodoMaker = ({
     }
   };
 
-  React.useEffect(() => {
-    console.log(choice);
-  }, [choice]);
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View

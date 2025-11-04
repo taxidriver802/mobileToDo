@@ -260,39 +260,13 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  main: {
-    justifyContent: 'space-around',
-  },
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
-  todosWrapper: {
-    height: 500,
-    width: 300,
-  },
-  todosScrollView: {
-    flex: 1,
-  },
-  todoButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 20,
     padding: 20,
-  },
-  content: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   button: {
     paddingHorizontal: 10,
@@ -306,15 +280,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  todoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
   },
   todayTitle: {
     borderBottomColor: '#ccc',

@@ -6,13 +6,30 @@ import { StyleSheet, Text, View } from 'react-native';
 import HomeComponent from '../components/HomeComponent';
 import { useUser } from '../../context/UserContextProvider';
 import { useAuth } from '@/context/AuthContextProvider';
+import { useTodos } from '@/context/TodoContextProvider';
 import { useUIStore } from '@/store/uiStore';
 
 export default function Home() {
   const { colors } = useTheme();
   const { user } = useUser();
+  const { todos } = useTodos();
   const { isLogin } = useAuth();
   const { useUserName } = useUIStore();
+
+  function getGreeting() {
+    const currentHour = new Date().getHours();
+    if (currentHour < 12) {
+      return 'Good Morning';
+    }
+    if (currentHour > 12 && currentHour < 18) {
+      return 'Good Afternoon';
+    }
+    if (currentHour >= 18) {
+      return 'Good Evening';
+    }
+  }
+
+  const greeting = getGreeting();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -28,11 +45,27 @@ export default function Home() {
         }}
       >
         <Text style={[styles.title, { color: colors.text }]}>
-          Hi, {isLogin ? (useUserName ? user?.fullName : user?.username) : null}
+          {greeting}
+          {isLogin
+            ? useUserName
+              ? `, ${user?.fullName}`
+              : `, ${user?.username}`
+            : null}
         </Text>
       </View>
 
-      <HomeComponent />
+      {todos.length >= 1 && (
+        <View style={{ height: 600 }}>
+          <HomeComponent />
+        </View>
+      )}
+      {todos.length === 0 && (
+        <View>
+          <Text style={[styles.content, { color: colors.text }]}>
+            You have no goals yet. Start by adding a new goal!
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

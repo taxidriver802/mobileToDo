@@ -51,7 +51,7 @@ export default function HomeComponentBite({
     >
       {/* Title and count */}
       <Text style={{ color: colors.text, fontWeight: '600' }}>
-        {title} {goals}
+        {title} - {goals}
         {isCompletedCard &&
           total > 0 &&
           (allDone ? ` / ${total} ✅` : ` / ${total} ⏳`)}

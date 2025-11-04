@@ -164,6 +164,7 @@ const ProfileUpdater: React.FC<ProfileUpdaterProps> = ({
         >
           <View style={{ marginTop: 50 }}>
             <View
+              pointerEvents="none"
               style={{
                 zIndex: 1,
                 backgroundColor: 'rgba(0,0,0,0.2)',
