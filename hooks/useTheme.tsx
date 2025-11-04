@@ -28,6 +28,7 @@ export interface ColorScheme {
     danger: [string, string];
     muted: [string, string];
     empty: [string, string];
+    streak: [string, string];
   };
   backgrounds: {
     input: string;
@@ -56,6 +57,7 @@ const lightColors: ColorScheme = {
     danger: ['#ef4444', '#dc2626'],
     muted: ['#9ca3af', '#6b7280'],
     empty: ['#f3f4f6', '#e5e7eb'],
+    streak: ['#f97316', '#facc15'],
   },
   backgrounds: {
     input: '#ffffff',
@@ -84,6 +86,7 @@ const darkColors: ColorScheme = {
     danger: ['#ef4444', '#dc2626'],
     muted: ['#374151', '#4b5563'],
     empty: ['#374151', '#4b5563'],
+    streak: ['#fb923c', '#fbbf24'],
   },
   backgrounds: {
     input: '#1e293b',
@@ -104,6 +107,7 @@ const forestColors: ColorScheme = {
     ...darkColors.gradients,
     primary: ['#34d399', '#0e766e'],
     background: ['#0b1d16', '#12251d'],
+    streak: ['#22c55e', '#84cc16'],
   },
   backgrounds: { input: '#12251d', editInput: '#0b1d16' },
 };
@@ -115,6 +119,10 @@ const amoledColors: ColorScheme = {
   border: '#1f2937',
   text: '#f8fafc',
   textMuted: '#94a3b8',
+  gradients: {
+    ...darkColors.gradients,
+    streak: ['#0ea5e9', '#22d3ee'],
+  },
   backgrounds: { input: '#0a0a0a', editInput: '#000000' },
 };
 
@@ -129,6 +137,7 @@ const roseColors: ColorScheme = {
     ...lightColors.gradients,
     primary: ['#fb7185', '#be123c'],
     surface: ['#fff1f2', '#ffe4e6'],
+    streak: ['#fb7185', '#f43f5e'],
   },
   backgrounds: { input: '#ffffff', editInput: '#fff1f2' },
 };
@@ -153,6 +162,7 @@ const sunsetColors: ColorScheme = {
     danger: ['#F87171', '#B91C1C'],
     muted: ['#FCD34D', '#F59E0B'],
     empty: ['#FFE4E6', '#FFEDD5'],
+    streak: ['#f97316', '#f59e0b'],
   },
   backgrounds: { input: '#FFFFFF', editInput: '#FFF7ED' },
   statusBarStyle: 'dark-content',
@@ -178,6 +188,7 @@ const midnightColors: ColorScheme = {
     danger: ['#EF4444', '#B91C1C'],
     muted: ['#7C3AED', '#6D28D9'],
     empty: ['#1A0933', '#0A0218'],
+    streak: ['#8b5cf6', '#a855f7'],
   },
   backgrounds: { input: '#1A0933', editInput: '#0A0218' },
   statusBarStyle: 'light-content',
@@ -203,6 +214,7 @@ const arcticColors: ColorScheme = {
     danger: ['#E53E3E', '#C53030'],
     muted: ['#CBD5E0', '#A0AEC0'],
     empty: ['#EDF2F7', '#E2E8F0'],
+    streak: ['#63b3ed', '#38bdf8'],
   },
   backgrounds: { input: '#FFFFFF', editInput: '#EDF2F7' },
   statusBarStyle: 'dark-content',
@@ -228,6 +240,7 @@ const solarizedDarkColors: ColorScheme = {
     danger: ['#DC322F', '#B71C1C'],
     muted: ['#586E75', '#657B83'],
     empty: ['#073642', '#002B36'],
+    streak: ['#b58900', '#cb4b16'],
   },
   backgrounds: { input: '#073642', editInput: '#002B36' },
   statusBarStyle: 'light-content',
@@ -254,6 +267,7 @@ const solarizedLightColors: ColorScheme = {
     danger: ['#DC322F', '#B71C1C'],
     muted: ['#93A1A1', '#839496'],
     empty: ['#EEE8D5', '#FDF6E3'],
+    streak: ['#f59e0b', '#f97316'],
   },
   backgrounds: { input: '#FFFDF5', editInput: '#FDF6E3' },
   statusBarStyle: 'dark-content',
@@ -279,6 +293,7 @@ const cyberColors: ColorScheme = {
     danger: ['#FB7185', '#E11D48'],
     muted: ['#334155', '#1E293B'],
     empty: ['#1E293B', '#0F172A'],
+    streak: ['#22d3ee', '#0ea5e9'],
   },
   backgrounds: { input: '#1E293B', editInput: '#0F172A' },
   statusBarStyle: 'light-content',

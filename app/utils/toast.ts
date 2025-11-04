@@ -13,20 +13,30 @@ type CommonOpts = Partial<
 >;
 
 // --- Existing helpers ---
-export const showSuccess = (message: string, opts?: CommonOpts) =>
+export const showSuccess = (
+  message: string,
+  message2: string,
+  opts?: CommonOpts
+) =>
   Toast.show({
     type: 'success',
     text1: message,
+    text2: message2,
     position: opts?.position ?? 'bottom',
     visibilityTime: opts?.visibilityTime ?? 3000,
     autoHide: opts?.autoHide ?? true,
     onPress: opts?.onPress,
   } satisfies ToastShowParams);
 
-export const showError = (message: string, opts?: CommonOpts) =>
+export const showError = (
+  message: string,
+  message2: string,
+  opts?: CommonOpts
+) =>
   Toast.show({
     type: 'error',
     text1: message,
+    text2: message2,
     position: opts?.position ?? 'top',
     visibilityTime: opts?.visibilityTime ?? 4000,
     autoHide: opts?.autoHide ?? false,
@@ -37,16 +47,16 @@ export const showError = (message: string, opts?: CommonOpts) =>
 export const showCustom = (
   title: string,
   subtitle?: string,
-  extras?: CustomToastExtras,
-  opts?: CommonOpts
+  opts?: CommonOpts,
+  extras?: CustomToastExtras
 ) =>
   Toast.show({
     type: 'customToast',
     text1: title,
     text2: subtitle,
-    props: extras, // consumed by custom renderer
     position: opts?.position ?? 'bottom',
     visibilityTime: opts?.visibilityTime ?? 3500,
     autoHide: opts?.autoHide ?? true,
     onPress: opts?.onPress,
+    props: extras as any,
   } satisfies ToastShowParams);

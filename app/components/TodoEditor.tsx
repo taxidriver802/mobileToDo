@@ -63,65 +63,102 @@ const TodoEditor = ({
     filter.charAt(0).toUpperCase() + filter.slice(1).toLowerCase();
 
   return (
-    <Modal transparent>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.container, { backgroundColor: colors.surface }]}>
-          <Text
-            style={[
-              styles.title,
-              { color: colors.text, alignSelf: 'center', marginBottom: 5 },
-            ]}
-          >
-            {filterTitle} goals
+    <View
+      style={{
+        position: 'absolute',
+        top: 0,
+        marginHorizontal: 'auto',
+        height: '100%',
+        width: '100%',
+      }}
+    >
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.bg,
+            height: '90%',
+
+            marginTop: 100,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.title,
+            { color: colors.text, alignSelf: 'center', marginBottom: 50 },
+          ]}
+        >
+          Edit {filterTitle} goals
+        </Text>
+
+        <TouchableOpacity
+          style={[
+            {
+              backgroundColor: colors.primary,
+              position: 'absolute',
+              top: -40,
+              right: 13,
+              width: 34,
+              height: 27,
+              padding: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 7,
+            },
+          ]}
+          onPress={handleClose}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        >
+          <Text style={[styles.buttonText, { color: colors.surface }]}>
+            <Ionicons
+              name="close"
+              size={15}
+              color={colors.surface}
+              style={{ padding: 0 }}
+            />
           </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.close, { backgroundColor: colors.primary }]}
-            onPress={handleClose}
-            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-          >
-            <Text style={[styles.buttonText, { color: colors.surface }]}>
-              X
-            </Text>
-          </TouchableOpacity>
-
-          <ScrollView
-            style={{ maxHeight: 400 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {filteredGoals.map(todo => (
-              <TouchableOpacity
-                key={todo.id}
-                style={styles.todoDelContainer}
-                onPress={() => handleEdit(todo)}
-                activeOpacity={0.7}
+        <ScrollView
+          style={{ maxHeight: 400 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {filteredGoals.map(todo => (
+            <TouchableOpacity
+              key={todo.id}
+              style={styles.todoDelContainer}
+              onPress={() => handleEdit(todo)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.description,
+                  { color: colors.text, maxWidth: 200 },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
               >
-                <Text
-                  style={[styles.title, { color: colors.text, maxWidth: 200 }]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {todo.title}
-                </Text>
+                {todo.title}
+              </Text>
 
-                <TouchableOpacity
-                  onPress={() => handleDeleteClick(todo.id)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  style={{ padding: 5 }}
-                >
-                  <Ionicons
-                    name="trash-outline"
-                    size={24}
-                    color={colors.primary}
-                    style={{ color: colors.textMuted }}
-                  />
-                </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleDeleteClick(todo.id)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={{ padding: 5 }}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={24}
+                  color={colors.primary}
+                  style={{ color: colors.textMuted }}
+                />
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
-    </Modal>
+    </View>
   );
 };
 
@@ -142,13 +179,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.75,
     shadowRadius: 3.84,
     height: 475,
-    width: 300,
+    width: '95%',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'left',
-  },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+  description: { fontSize: 20, paddingLeft: 10 },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',

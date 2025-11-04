@@ -1,4 +1,3 @@
-// app/(auth)/TEMPauthLogin.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -8,22 +7,16 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-/* import { login } from '../../api/auth'; */
+
 import useTheme from '@/hooks/useTheme';
 import Loading from '../components/loading';
 import { useAuth } from '@/context/AuthContextProvider';
-import { useUser } from '@/context/UserContextProvider';
 import { loginAndHydrate } from '../../api/auth';
 import { showError, showSuccess } from '@/app/utils/toast';
 
-type Props = {
-  onSwitchMode?: () => void;
-};
-
-export default function AuthLogin({ onSwitchMode }: Props) {
+export default function AuthLogin() {
   const { colors } = useTheme();
   const { setIsLogin } = useAuth();
-  const { fetchUser } = useUser();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -37,11 +30,11 @@ export default function AuthLogin({ onSwitchMode }: Props) {
 
       if (res.ok) {
         setIsLogin(true);
-        showSuccess('Login successful', {
-          onPress: () => console.log('pressed toast!'),
-        });
+        showSuccess('Login successful', '');
       } else {
-        showError('Login failed, check your credentials');
+        showError('Login failed', 'Check your credentials.', {
+          position: 'top',
+        });
       }
     } catch (e) {
       Alert.alert('Error', 'Something went wrong');

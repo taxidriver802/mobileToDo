@@ -13,6 +13,7 @@ import useTheme from '@/hooks/useTheme';
 import Loading from '../components/loading';
 import { useAuth } from '@/context/AuthContextProvider';
 import Toast from 'react-native-toast-message';
+import { showError, showSuccess } from '../utils/toast';
 
 type Props = {
   onSwitchMode?: () => void;
@@ -34,19 +35,13 @@ export default function AuthRegister({ onSwitchMode }: Props) {
       const res = await registerAndHydrate(username, password, fullName);
 
       if (res.ok) {
-        Toast.show({
-          type: 'success',
-          text1: 'Registration Successful',
-          text2: 'You are now logged in',
-          position: 'bottom',
+        showSuccess('Registration Successful', 'You are now logged in', {
+          position: 'top',
         });
         setIsLogin(true); // AuthGate will route into app
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Registration Failed',
-          text2: 'Please try again',
-          position: 'bottom',
+        showError('Registration Failed', 'Please try again', {
+          position: 'top',
         });
       }
     } catch (e) {

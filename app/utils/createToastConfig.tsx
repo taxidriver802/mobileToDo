@@ -7,6 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 type Colors = {
   bg: string;
   text: string;
+  surface: string;
   // add any others you use: primary, success, danger, etc.
 };
 
@@ -38,7 +39,7 @@ export function createToastConfig(colors: Colors): ToastConfig {
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: colors.bg,
+            backgroundColor: colors.surface,
             borderRadius: 14,
             padding: 10,
             borderLeftWidth: 6,

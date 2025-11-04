@@ -70,7 +70,6 @@ export async function updateGoal(
   return throwIfNotOk(res, 'Failed to update goal');
 }
 
-/** Convenience if your business rule is: editing content resets completion */
 export async function updateGoalResetCompletion(
   id: string,
   patch: Partial<Pick<Goal, 'title' | 'description' | 'frequency'>>

@@ -1,5 +1,5 @@
 import useTheme from '@/hooks/useTheme';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
 import {
@@ -19,6 +19,7 @@ import TodoCard from '../components/TodoCard';
 import SlideUpSheet from '../components/slideUpSheet';
 
 export type Freq = 'daily' | 'weekly' | 'monthly';
+type Filter = 'active' | 'completed' | Freq;
 
 export interface Todo {
   title: string;
@@ -28,22 +29,86 @@ export interface Todo {
   frequency: Freq;
 }
 
+const isFilter = (v: unknown): v is Filter =>
+  v === 'active' ||
+  v === 'daily' ||
+  v === 'weekly' ||
+  v === 'monthly' ||
+  v === 'completed';
+
 export default function Index() {
   const { colors } = useTheme();
   const [isTodoOpen, setIsTodoOpen] = React.useState(false);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [selectedTodo, setSelectedTodo] = React.useState<Todo | null>(null);
   const [redirecting, setRedirecting] = React.useState(true);
+  const [intialRedirectDone, setInitialRedirectDone] = React.useState(false);
 
   const { todos, toggleComplete } = useTodos();
 
   const router = useRouter();
 
-  const [filter, setFilter] = React.useState<'daily' | 'weekly' | 'monthly'>(
-    () => 'daily'
+  const { filter: filterParam } = useLocalSearchParams<{ filter?: string }>();
+  const [filter, setFilter] = React.useState<Filter>(() =>
+    isFilter(filterParam) ? (filterParam as Filter) : 'active'
   );
 
+  const filtersInPriority = [
+    'active',
+    'completed',
+    'daily',
+    'weekly',
+    'monthly',
+  ] as const;
+
   React.useEffect(() => {
+    // only run on mount (or when todos update)
+    if (todos.length === 0) return;
+
+    // find the first filter that returns a non-empty result
+    for (const f of filtersInPriority) {
+      const hasData = todos.some(todo => {
+        if (f === 'completed') return !!todo.completed;
+        if (f === 'active') return !todo.completed;
+        return todo.frequency === f && !todo.completed;
+      });
+      if (hasData) {
+        setFilter(f);
+        return;
+      }
+    }
+
+    // edge case: no todos match any filters
+    setFilter('active');
+  }, [todos]);
+
+  React.useEffect(() => {
+    if (isFilter(filterParam) && filterParam !== filter) {
+      setFilter(filterParam);
+    }
+  }, [filterParam]);
+
+  const filteredGoals = React.useMemo(() => {
+    switch (filter) {
+      case 'completed':
+        return todos.filter(t => !!t.completed);
+
+      case 'active':
+        return todos.filter(t => !t.completed);
+
+      case 'daily':
+      case 'weekly':
+      case 'monthly':
+        return todos.filter(t => t.frequency === filter && !t.completed);
+
+      default:
+        return todos;
+    }
+  }, [todos, filter]);
+
+  React.useEffect(() => {
+    if (intialRedirectDone) return;
+    setInitialRedirectDone(true);
     const timer = setTimeout(() => {
       router.replace('/home');
       setRedirecting(false);
@@ -67,11 +132,6 @@ export default function Index() {
     setIsTodoOpen(false);
     setSelectedTodo(null);
   };
-
-  // normalize frequency and filter strictly
-  const filteredGoals = todos.filter(
-    t => ((t.frequency ?? 'daily') as string).toLowerCase() === filter
-  );
 
   if (redirecting) {
     return <Loading />;
@@ -100,35 +160,37 @@ export default function Index() {
             styles.segment,
             {
               borderColor: colors.border,
-              transform: [{ translateY: -10 }],
+              backgroundColor: colors.surface,
             },
           ]}
         >
-          {(['daily', 'weekly', 'monthly'] as const).map(opt => {
-            const active = filter === opt;
-            return (
-              <TouchableOpacity
-                key={opt}
-                onPress={() => setFilter(opt)}
-                style={[
-                  styles.segmentBtn,
-                  {
-                    backgroundColor: active ? colors.primary : 'transparent',
-                  },
-                ]}
-              >
-                <Text
-                  style={{
-                    color: active ? colors.surface : colors.text,
-                    fontWeight: active ? ('700' as const) : ('500' as const),
-                    textTransform: 'capitalize',
-                  }}
+          {(['active', 'daily', 'weekly', 'monthly', 'completed'] as const).map(
+            opt => {
+              const active = filter === opt;
+              return (
+                <TouchableOpacity
+                  key={opt}
+                  onPress={() => setFilter(opt)}
+                  style={[
+                    styles.segmentBtn,
+                    {
+                      backgroundColor: active ? colors.primary : 'transparent',
+                    },
+                  ]}
                 >
-                  {opt}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    style={{
+                      color: active ? colors.surface : colors.text,
+                      fontWeight: active ? ('700' as const) : ('500' as const),
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {opt}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }
+          )}
         </View>
       </View>
 
@@ -277,9 +339,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   segmentBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 999,
-    marginHorizontal: 2,
+    marginHorizontal: 1,
   },
 });

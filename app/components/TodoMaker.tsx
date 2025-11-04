@@ -279,7 +279,8 @@ const TodoMaker = ({
                   styles.segment,
                   {
                     borderColor: colors.textMuted,
-                    marginBottom: 20,
+                    backgroundColor: colors.surface,
+                    marginBottom: 25,
                   },
                 ]}
               >

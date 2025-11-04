@@ -29,22 +29,17 @@ const WeekTracker: FC<WeekTrackerProps> = () => {
         let dayStyle = styles.pendingDay;
         let textStyle = styles.pendingText;
 
-        if (dateString === todayString) {
-          if (areAllLiveTodosCompleted) {
-            // Success
-            dayStyle = styles.completedDay;
-            textStyle = styles.completedText;
-          } else {
-            const historyValue = completionHistory[dateString];
-            if (historyValue === true) {
-              dayStyle = styles.completedDay;
-              textStyle = styles.completedText;
-            } else if (historyValue === false) {
-              // Failure
-              dayStyle = styles.failedDay;
-              textStyle = styles.failedText;
-            }
-          }
+        const historyValue = completionHistory[dateString];
+
+        if (historyValue === true) {
+          dayStyle = styles.completedDay;
+          textStyle = styles.completedText;
+        } else if (historyValue === false) {
+          dayStyle = styles.failedDay;
+          textStyle = styles.failedText;
+        } else if (dateString === todayString && areAllLiveTodosCompleted) {
+          dayStyle = styles.completedDay;
+          textStyle = styles.completedText;
         }
 
         return (
@@ -60,17 +55,19 @@ const WeekTracker: FC<WeekTrackerProps> = () => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-around', // Use space-around for better spacing
-    marginHorizontal: 16,
-    marginVertical: 24,
+    justifyContent: 'space-around',
+    marginHorizontal: 0,
+    marginTop: 25,
+    height: 30,
+    width: 230,
   },
   day: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2, // Add a border for a cleaner look
+    borderWidth: 2,
   },
   completedDay: {
     backgroundColor: '#4CAF50', // A nice green

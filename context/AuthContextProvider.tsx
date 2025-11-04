@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { clearApiBaseUrl, getToken, setApiBaseUrl } from '../api/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { USE_NGROK } from '@/api/env';
 
 interface AuthContextType {

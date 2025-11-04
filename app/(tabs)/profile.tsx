@@ -13,6 +13,7 @@ import { useUser } from '@/context/UserContextProvider';
 import { useUIStore } from '@/store/uiStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SlideUpSheet from '../components/slideUpSheet';
+import FireFlickerGradient from '@/hooks/FireFlickerGradient';
 
 export default function Profile() {
   const { colors } = useTheme();
@@ -66,7 +67,7 @@ export default function Profile() {
           return;
         }
         case 'updater': {
-          if (!isSettingsOpen) return; // only when settings is open
+          if (!isSettingsOpen) return;
           setIsUpdaterOpen(prev => !prev);
           return;
         }
@@ -136,42 +137,69 @@ export default function Profile() {
               />
             )}
 
-            <Text
-              style={[
-                styles.title,
-                {
-                  color: colors.text,
-                  paddingTop: 75,
-                  textAlign: 'left',
-                  maxWidth: 200,
-                },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {isLogin ? (useUserName ? user?.fullName : user?.username) : null}
-            </Text>
-          </View>
-          {streak >= 1 && (
-            <View
-              style={{
-                alignSelf: 'center',
+            <View style={{ flexDirection: 'column' }}>
+              <WeekTracker />
 
-                marginRight: 10,
-              }}
-            >
-              <Ionicons name="star-outline" size={70} color={colors.primary} />
               <Text
+                style={[
+                  styles.title,
+                  {
+                    color: colors.text,
+                    paddingTop: 15,
+                    textAlign: 'left',
+                    maxWidth: 153,
+                    overflow: 'hidden',
+                  },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {isLogin
+                  ? useUserName
+                    ? user?.fullName
+                    : user?.username
+                  : null}
+              </Text>
+            </View>
+          </View>
+
+          {streak >= 1 && (
+            <View style={{ flex: 1 }}>
+              <View
                 style={{
-                  fontSize: 20,
-                  color: colors.text,
+                  alignSelf: 'center',
+                  marginRight: 10,
                   position: 'absolute',
-                  right: 32,
-                  top: 26,
+                  right: 0,
+                  top: 65,
+                  width: 80,
+                  height: 35,
+                  borderRadius: 18,
+                  overflow: 'hidden',
+                  justifyContent: 'center',
+                  alignItems: 'center',
                 }}
               >
-                {streak}
-              </Text>
+                <FireFlickerGradient variant="streak" />
+
+                <Ionicons
+                  name="flame-outline"
+                  size={22}
+                  color={colors.surface}
+                  style={{ position: 'absolute', left: 10 }}
+                />
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: '700',
+                    color: colors.surface,
+                    position: 'absolute',
+                    right: 12,
+                  }}
+                >
+                  {streak}
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -210,15 +238,6 @@ export default function Profile() {
           <Ionicons name="options" size={15} color={colors.surface} />
         </Text>
       </TouchableOpacity>
-
-      {isLogin && (
-        <View>
-          <Text style={[styles.content, { color: colors.text }]}>
-            Your Streak: {streak}
-          </Text>
-          <WeekTracker />
-        </View>
-      )}
 
       <SlideUpSheet
         open={isSettingsOpen && !isFriendsOpen}

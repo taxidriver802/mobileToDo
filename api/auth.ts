@@ -11,7 +11,6 @@ export type AuthHydrateResult =
   | { ok: true; token: string; user: any }
   | { ok: false; message: string; code?: number };
 
-/** ---- In-memory auth state (the single source of truth at runtime) ---- */
 const authState: {
   token: string | null;
   user: any | null;
@@ -40,7 +39,6 @@ const CANDIDATE_BASES = [
   `http://10.0.3.2:${API_PORT}`,
 ];
 
-// Optional in-memory override (set once per run)
 let volatileApiBaseOverride: string | null = null;
 
 export function setApiBaseUrl(base: string) {
@@ -70,11 +68,6 @@ async function detectBaseUrl(): Promise<string> {
       // try next
     }
   }
-
-  console.warn(
-    '[api.auth] no candidate base reachable, falling back to API_URL',
-    API_URL
-  );
   return API_URL.replace(/\/api$/, '');
 }
 
@@ -86,7 +79,6 @@ export async function fetchWithAutoBase(inputPath: string, init?: RequestInit) {
   return fetch(url, init);
 }
 
-/** ---- Public auth flows ---- */
 export async function loginAndHydrate(
   username: string,
   password: string
@@ -116,7 +108,6 @@ export async function registerAndHydrate(
   }
 }
 
-/** Try to restore token from storage, then load user */
 export async function bootstrapSession(): Promise<AuthHydrateResult> {
   try {
     const stored = await AsyncStorage.getItem('token');
@@ -136,7 +127,6 @@ export async function bootstrapSession(): Promise<AuthHydrateResult> {
   }
 }
 
-/** ---- Auth endpoints (no user persisted) ---- */
 export async function getMe() {
   const token = authState.token;
   if (!token) throw new Error('No token available');
@@ -147,7 +137,7 @@ export async function getMe() {
 
   if (!res.ok) {
     if (res.status === 401) {
-      // clear token (mem + storage), no 'user' in storage anymore
+      // clear token (mem + storage)
       await AsyncStorage.removeItem('token');
       setTokenInMemory(null);
       setUserInMemory(null);
@@ -207,6 +197,7 @@ export async function register(
       try {
         await AsyncStorage.setItem('token', token);
         setTokenInMemory(token);
+        await clearLocalUserState();
       } catch (e) {
         console.error('[auth.register] storing token failed ->', String(e));
       }
@@ -277,26 +268,11 @@ export async function login(username: string, password: string) {
 
     await AsyncStorage.setItem('token', token);
     setTokenInMemory(token);
+    await clearLocalUserState();
+
     return data;
   } catch (err: any) {
     console.error('[auth.login] error ->', err?.message || String(err));
-    /* if (
-      err?.name === 'AbortError' ||
-      err?.message === 'The user aborted a request.'
-    ) {
-      throw new Error(
-        'Request timed out. Please check your network and try again.'
-      );
-    }
-    if (
-      typeof err?.message === 'string' &&
-      err.message.includes('Network request failed')
-    ) {
-      throw new Error(
-        'Network request failed. Check that your API base is reachable from this device/emulator.'
-      );
-    }
-    throw err; */
   } finally {
     clearTimeout(timeout);
   }
@@ -304,7 +280,6 @@ export async function login(username: string, password: string) {
 
 /** ---- Utilities ---- */
 export async function isLoggedIn(): Promise<boolean> {
-  // Prefer in-memory token (fast path); fall back to storage during cold start
   let token = authState.token;
   if (!token) token = await AsyncStorage.getItem('token');
   return !!token && !isJwtExpired(token);
@@ -317,7 +292,22 @@ export async function logout(): Promise<void> {
     console.error('Error during logout:', error);
   } finally {
     setTokenInMemory(null);
+    await clearLocalUserState();
     setUserInMemory(null);
+  }
+}
+
+async function clearLocalUserState() {
+  try {
+    await AsyncStorage.multiRemove([
+      'streak',
+      'completionHistory',
+      'lastDailyCheckDate',
+      'streakIncreasedForDate',
+      'todos',
+    ]);
+  } catch (e) {
+    console.warn('[auth] clearLocalUserState failed:', String(e));
   }
 }
 

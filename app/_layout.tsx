@@ -11,11 +11,11 @@ import Toast from 'react-native-toast-message';
 import { View, ActivityIndicator } from 'react-native';
 
 import { ThemeProvider } from '@/hooks/useTheme';
-import useTheme from '@/hooks/useTheme'; // use after provider
+import useTheme from '@/hooks/useTheme';
 import { AuthProvider, useAuth } from '@/context/AuthContextProvider';
 import { UserProvider } from '@/context/UserContextProvider';
 
-import { createToastConfig } from './utils/createToastConfig'; // adjust if your path differs
+import { createToastConfig } from './utils/createToastConfig';
 
 function Splash() {
   return (
