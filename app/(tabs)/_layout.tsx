@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContextProvider';
 
 import type { Todo } from './index';
 import { bootstrapSession } from '@/api/auth';
+import { MD3DarkTheme, PaperProvider } from 'react-native-paper';
 
 const TabsLayout = () => {
   const { colors } = useTheme();
@@ -29,61 +30,75 @@ const TabsLayout = () => {
     })();
   }, []);
 
+  const theme = {
+    ...MD3DarkTheme,
+    colors: {
+      ...MD3DarkTheme.colors,
+      primary: '#6C9EF8', // align with your app colors
+      secondary: '#c27c2c',
+      surface: '#121212',
+      background: '#0b0b0b',
+      // add others you use (onPrimary, secondaryContainer, etc.)
+    },
+  };
+
   return (
     <ThemeProvider>
-      <TodosProvider>
-        <Tabs
-          screenOptions={{
-            tabBarActiveTintColor: colors.primary,
-            tabBarInactiveTintColor: colors.textMuted,
-            tabBarStyle: {
-              backgroundColor: colors.surface,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-              height: 90,
-              paddingBottom: 30,
-              paddingTop: 10,
-            },
-            tabBarLabelStyle: {
-              fontSize: 15,
-              fontWeight: '600',
-            },
-            headerShown: false,
-          }}
-        >
-          <Tabs.Screen
-            name="index"
-            options={{
-              title: 'Goals',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="flash-outline" size={size} color={color} />
-              ),
+      <PaperProvider theme={theme}>
+        <TodosProvider>
+          <Tabs
+            screenOptions={{
+              tabBarActiveTintColor: colors.primary,
+              tabBarInactiveTintColor: colors.textMuted,
+              tabBarStyle: {
+                backgroundColor: colors.surface,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+                height: 90,
+                paddingBottom: 30,
+                paddingTop: 10,
+              },
+              tabBarLabelStyle: {
+                fontSize: 15,
+                fontWeight: '600',
+              },
+              headerShown: false,
             }}
-            initialParams={{ todos }}
-          />
+          >
+            <Tabs.Screen
+              name="index"
+              options={{
+                title: 'Goals',
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="flash-outline" size={size} color={color} />
+                ),
+              }}
+              initialParams={{ todos }}
+            />
 
-          <Tabs.Screen
-            name="home"
-            options={{
-              title: 'Home',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="home" size={size} color={color} />
-              ),
-            }}
-            initialParams={{ todos }}
-          />
+            <Tabs.Screen
+              name="home"
+              options={{
+                title: 'Home',
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="home" size={size} color={color} />
+                ),
+              }}
+              initialParams={{ todos }}
+            />
 
-          <Tabs.Screen
-            name="profile"
-            options={{
-              title: 'Profile',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name={'person'} size={size} color={color} />
-              ),
-            }}
-          />
-        </Tabs>
-      </TodosProvider>
+            <Tabs.Screen
+              name="profile"
+              options={{
+                title: 'Profile',
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name={'person'} size={size} color={color} />
+                ),
+              }}
+            />
+          </Tabs>
+        </TodosProvider>
+      </PaperProvider>
     </ThemeProvider>
   );
 };

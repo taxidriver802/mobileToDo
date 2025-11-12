@@ -1,6 +1,6 @@
 // utils/createToastConfig.tsx
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { BaseToast, ErrorToast, ToastConfig } from 'react-native-toast-message';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -8,7 +8,7 @@ type Colors = {
   bg: string;
   text: string;
   surface: string;
-  // add any others you use: primary, success, danger, etc.
+  primary: string;
 };
 
 export function createToastConfig(colors: Colors): ToastConfig {
@@ -29,25 +29,35 @@ export function createToastConfig(colors: Colors): ToastConfig {
         text2Style={{ fontSize: 10, color: colors.text }}
       />
     ),
-    // --- upgraded custom toast ---
+
+    // --- custom interactive toast ---
     customToast: ({ text1, text2, props }) => {
-      // grab extras passed in showCustom
-      const { icon, accentColor, avatarUrl } = props || {};
+      const {
+        icon,
+        accentColor,
+        avatarUrl,
+        backgroundColorOpt = colors.surface,
+
+        confirmText = 'Confirm',
+        cancelText = 'Cancel',
+        onConfirm,
+        onCancel,
+      } = props || {};
 
       return (
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: colors.surface,
+            backgroundColor: backgroundColorOpt,
             borderRadius: 14,
-            padding: 10,
+            padding: 12,
             borderLeftWidth: 6,
             borderLeftColor: accentColor ?? colors.text,
-            minHeight: 60,
+            minHeight: 64,
           }}
         >
-          {avatarUrl && (
+          {avatarUrl ? (
             <Image
               source={{ uri: avatarUrl }}
               style={{
@@ -57,21 +67,75 @@ export function createToastConfig(colors: Colors): ToastConfig {
                 marginRight: 8,
               }}
             />
-          )}
-          {icon && (
+          ) : icon ? (
             <Ionicons
               name={icon}
               size={24}
               color={accentColor ?? colors.text}
               style={{ marginRight: 8 }}
             />
-          )}
+          ) : null}
+
           <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.text, fontWeight: '600' }}>
-              {text1}
-            </Text>
-            {text2 && (
+            {!!text1 && (
+              <Text style={{ color: colors.text, fontWeight: '600' }}>
+                {text1}
+              </Text>
+            )}
+            {!!text2 && (
               <Text style={{ color: colors.text, marginTop: 2 }}>{text2}</Text>
+            )}
+
+            {/* Actions */}
+            {(onConfirm || onCancel) && (
+              <View
+                style={{
+                  marginTop: 10,
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  gap: 16,
+                }}
+              >
+                {!!onCancel && (
+                  <TouchableOpacity
+                    onPress={onCancel}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    style={{ paddingRight: 135 }}
+                  >
+                    <Text
+                      style={{
+                        color: colors.primary,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10,
+                        borderRadius: 100,
+
+                        backgroundColor: colors.surface,
+                      }}
+                    >
+                      {cancelText}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {!!onConfirm && (
+                  <TouchableOpacity
+                    onPress={onConfirm}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                  >
+                    <Text
+                      style={{
+                        color: accentColor ?? colors.text,
+                        fontWeight: '700',
+                        paddingVertical: 6,
+                        paddingRight: 40,
+                      }}
+                    >
+                      {confirmText}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
           </View>
         </View>

@@ -1,11 +1,25 @@
 // utils/toast.ts
+import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast, { ToastShowParams } from 'react-native-toast-message';
 
 // Keep these in sync with what your custom renderer reads in createToastConfig
 export type CustomToastExtras = {
-  icon?: 'checkmark-circle' | 'alert-circle' | 'information-circle' | 'trophy';
+  icon?: React.ComponentProps<typeof Ionicons>['name'] | React.ReactElement;
   accentColor?: string;
+  backgroundColorOpt?: string;
   avatarUrl?: string;
+  confirmText?: string;
+  cancelText?: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+};
+
+type ConfirmOpts = {
+  confirmText?: string;
+  cancelText?: string;
+  icon?: CustomToastExtras['icon'];
+  accentColor?: string;
+  backgroundColorOpt?: string;
 };
 
 type CommonOpts = Partial<
@@ -60,3 +74,32 @@ export const showCustom = (
     onPress: opts?.onPress,
     props: extras as any,
   } satisfies ToastShowParams);
+
+export const showConfirmToast = (
+  title: string,
+  subtitle?: string,
+  extra?: ConfirmOpts
+) =>
+  new Promise<boolean>(resolve => {
+    const settle = (ok: boolean) => {
+      Toast.hide();
+      resolve(ok);
+    };
+
+    Toast.hide();
+
+    showCustom(
+      title,
+      subtitle,
+      { position: 'bottom', autoHide: false, visibilityTime: 60000 },
+      {
+        icon: extra?.icon,
+        accentColor: extra?.accentColor,
+        backgroundColorOpt: extra?.backgroundColorOpt, // <-- thread through
+        confirmText: extra?.confirmText ?? 'Unfriend',
+        cancelText: extra?.cancelText ?? 'Cancel',
+        onConfirm: () => settle(true),
+        onCancel: () => settle(false),
+      }
+    );
+  });

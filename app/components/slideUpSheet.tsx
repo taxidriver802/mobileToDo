@@ -17,7 +17,7 @@ type Props = {
   onCloseStart?: () => void;
   onCloseEnd?: () => void;
   onClose?: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   heightPct?: number;
   backdropOpacity?: number;
   durationMs?: number;
