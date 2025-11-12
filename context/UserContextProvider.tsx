@@ -16,6 +16,11 @@ interface User {
   profilePic?: string;
   streak: number;
   highestStreak: number;
+  friends: string[];
+  friendRequests: {
+    sent: string[];
+    received: string[];
+  };
 }
 
 interface UserContextType {

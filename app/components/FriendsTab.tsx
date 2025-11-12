@@ -10,6 +10,7 @@ import {
   View,
   Keyboard,
   Pressable,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -18,7 +19,8 @@ import useTheme from '@/hooks/useTheme';
 import { useUser } from '@/context/UserContextProvider';
 import { fetchWithAutoBase, getToken } from '@/api/auth';
 import SlideUpSheet from './slideUpSheet';
-import { TextInput } from 'react-native-paper';
+import { Button, TextInput } from 'react-native-paper';
+import { getRelationshipStatus } from '@/utils/relationships';
 
 type UserLite = {
   _id: string;
@@ -142,6 +144,22 @@ export default function FriendsTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFriendsOpen]);
 
+  type RelationshipStatus =
+    | 'self'
+    | 'friends'
+    | 'request_sent'
+    | 'request_received'
+    | 'none';
+
+  type RowActionsProps = {
+    status: RelationshipStatus | undefined;
+    userId: string;
+    onAdd: (id: string) => void;
+    onAccept: (id: string) => void;
+    onDecline: (id: string) => void;
+    onUnfriend: (id: string) => void;
+  };
+
   const onRefresh = React.useCallback(() => {
     setHasMore(true);
     fetchPage(1, 'replace');
@@ -165,7 +183,8 @@ export default function FriendsTab({
         gap: 12,
       }}
       onPress={() => {
-        console.log('hello', item.username);
+        const status = relationshipStatus(item._id);
+        console.log('status for', item.username, status);
       }}
     >
       {/* avatar */}
@@ -211,12 +230,22 @@ export default function FriendsTab({
 
       {/* streak pills (right-aligned) */}
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-        {item.streak! > 0 && (
-          <StatPill icon="flame-outline" value={item.streak!} />
-        )}
-        {item.highestStreak! > 0 && (
-          <StatPill icon="trophy-outline" value={item.highestStreak!} />
-        )}
+        <View style={{ flexDirection: 'column', gap: 3 }}>
+          {(item.streak ?? 0) > 0 && (
+            <StatPill icon="flame-outline" value={item.streak ?? 0} />
+          )}
+          {(item.highestStreak ?? 0) > 0 && (
+            <StatPill icon="trophy-outline" value={item.highestStreak ?? 0} />
+          )}
+        </View>
+        <RenderFriendActions
+          status={relationshipStatus(item._id)}
+          userId={item._id}
+          onAdd={onAdd}
+          onAccept={onAccept}
+          onDecline={onDecline}
+          onUnfriend={onUnfriend}
+        />
       </View>
     </TouchableOpacity>
   );
@@ -354,6 +383,179 @@ export default function FriendsTab({
     </View>
   );
 
+  const meSets = React.useMemo(() => {
+    const friends = new Set((currentUser?.friends ?? []).map(String));
+    const sent = new Set((currentUser?.friendRequests?.sent ?? []).map(String));
+    const received = new Set(
+      (currentUser?.friendRequests?.received ?? []).map(String)
+    );
+    return { friends, sent, received };
+  }, [
+    currentUser?.friends,
+    currentUser?.friendRequests?.sent,
+    currentUser?.friendRequests?.received,
+  ]);
+
+  const relationshipStatus = (otherUserId: string): RelationshipStatus => {
+    const meId = currentUser?.id;
+    if (!meId) return 'none';
+
+    const me = {
+      friends: Array.from(meSets.friends),
+      sent: Array.from(meSets.sent),
+      received: Array.from(meSets.received),
+    };
+
+    return getRelationshipStatus(meId, otherUserId, me);
+  };
+
+  function RenderFriendActions({
+    status,
+    userId,
+    onAdd,
+    onAccept,
+    onDecline,
+    onUnfriend,
+  }: RowActionsProps) {
+    if (!status) return null;
+
+    const pillStyle = {
+      borderRadius: 999,
+      height: 40,
+    };
+    const pillContent = {
+      height: 40,
+      paddingHorizontal: 8,
+    };
+
+    switch (status) {
+      case 'self':
+        return null;
+
+      case 'none': // Add
+        return (
+          <Button
+            mode="contained"
+            compact
+            style={pillStyle}
+            contentStyle={pillContent}
+            buttonColor={colors.primary}
+            textColor={colors.surface}
+            onPress={() => onAdd(userId)}
+          >
+            Add
+          </Button>
+        );
+
+      case 'request_sent': // Pending
+        return (
+          <Button
+            mode="outlined"
+            compact
+            style={[pillStyle, { borderColor: colors.border }]}
+            contentStyle={pillContent}
+            textColor={colors.text}
+            disabled
+          >
+            Pending
+          </Button>
+        );
+
+      case 'request_received': // Accept / Decline
+        return (
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Button
+              mode="contained"
+              compact
+              style={pillStyle}
+              contentStyle={pillContent}
+              buttonColor="#2ecc71"
+              textColor={colors.surface}
+              onPress={() => onAccept(userId)}
+            >
+              Accept
+            </Button>
+            <Button
+              mode="text"
+              compact
+              style={pillStyle}
+              contentStyle={pillContent}
+              textColor={colors.textMuted}
+              onPress={() => onDecline(userId)}
+            >
+              Decline
+            </Button>
+          </View>
+        );
+
+      case 'friends': // Unfriend
+        return (
+          <Button
+            mode="outlined"
+            compact
+            style={[pillStyle, { borderColor: '#e74c3c' }]}
+            contentStyle={pillContent}
+            textColor="#e74c3c"
+            onPress={() => onUnfriend(userId)}
+          >
+            Unfriend
+          </Button>
+        );
+
+      default:
+        return null;
+    }
+  }
+
+  const onAdd = async (id: string) => {
+    // optimistic UI here if you like
+    try {
+      await fetchWithAutoBase(`/api/friends/request/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      onRefresh(); // or update the one row’s status locally
+    } catch (e) {
+      console.log('add failed', e);
+    }
+  };
+
+  const onAccept = async (id: string) => {
+    try {
+      await fetchWithAutoBase(`/api/friends/accept/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      onRefresh();
+    } catch (e) {
+      console.log('accept failed', e);
+    }
+  };
+
+  const onDecline = async (id: string) => {
+    try {
+      await fetchWithAutoBase(`/api/friends/decline/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      onRefresh();
+    } catch (e) {
+      console.log('decline failed', e);
+    }
+  };
+
+  const onUnfriend = async (id: string) => {
+    try {
+      await fetchWithAutoBase(`/api/friends/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      onRefresh();
+    } catch (e) {
+      console.log('unfriend failed', e);
+    }
+  };
+
   return (
     <SlideUpSheet
       open={isFriendsOpen}
@@ -362,12 +564,12 @@ export default function FriendsTab({
       onOpenEnd={() => setSheetBusy(false)}
       onCloseStart={() => setSheetBusy(true)}
       onCloseEnd={() => setSheetBusy(false)}
-      backdropStyle={{ backgroundColor: 'transparent' }} // match Settings
+      backdropStyle={{ backgroundColor: 'transparent' }}
       dismissOnBackdropPress={true}
       heightPct={0.9}
       sheetStyle={{ backgroundColor: 'transparent' }}
     >
-      {/* panel container (styled similarly to Settings container) */}
+      {/* panel container */}
       <View
         style={{
           padding: 25,
@@ -394,7 +596,7 @@ export default function FriendsTab({
           Users Streaks
         </Text>
 
-        {/* top-right toggle button (parity with Settings) */}
+        {/* top-right toggle button  */}
         <TouchableOpacity
           disabled={sheetBusy}
           style={{
@@ -414,11 +616,7 @@ export default function FriendsTab({
           }}
         >
           <Text>
-            {!isFriendsOpen ? (
-              <Ionicons name="close" size={15} color={colors.surface} />
-            ) : (
-              <Ionicons name="close" size={15} color={colors.surface} />
-            )}
+            <Ionicons name="close" size={15} color={colors.surface} />
           </Text>
         </TouchableOpacity>
         <Pressable onPress={Keyboard.dismiss}>
@@ -428,7 +626,6 @@ export default function FriendsTab({
               height: '115%',
               paddingTop: 15,
               paddingBottom: 175,
-              /* backgroundColor: 'red', */
             }}
             edges={['left', 'right', 'bottom']}
           >
@@ -514,10 +711,12 @@ export default function FriendsTab({
             />
           </SafeAreaView>
         </Pressable>
-        {/*  <View>
-          <Text style={{ color: colors.text }}>All Users: {users.length}</Text>
-        </View> */}
       </View>
     </SlideUpSheet>
   );
 }
+
+const btnStyles = StyleSheet.create({
+  base: { borderRadius: 999, height: 34 },
+  content: { height: 34, paddingHorizontal: 12 },
+});
