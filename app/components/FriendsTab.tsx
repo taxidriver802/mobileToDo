@@ -232,10 +232,18 @@ export default function FriendsTab({
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
         <View style={{ flexDirection: 'column', gap: 3 }}>
           {(item.streak ?? 0) > 0 && (
-            <StatPill icon="flame-outline" value={item.streak ?? 0} />
+            <StatPill
+              icon="flame-outline"
+              value={item.streak ?? 0}
+              active={sortBy === 'current'}
+            />
           )}
           {(item.highestStreak ?? 0) > 0 && (
-            <StatPill icon="trophy-outline" value={item.highestStreak ?? 0} />
+            <StatPill
+              icon="trophy-outline"
+              value={item.highestStreak ?? 0}
+              active={sortBy === 'highest'}
+            />
           )}
         </View>
         <RenderFriendActions
@@ -354,34 +362,40 @@ export default function FriendsTab({
   const StatPill = ({
     icon,
     value,
+    active = false,
   }: {
     icon: keyof typeof Ionicons.glyphMap;
     value: number;
-  }) => (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 999,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-      }}
-    >
-      <Ionicons name={icon} size={14} color={colors.text} />
-      <Text
+    active?: boolean;
+  }) => {
+    const bg = active ? colors.primary : colors.surface;
+    const border = active ? colors.primary : colors.border;
+    const text = active
+      ? colors.surface
+      : icon === 'trophy-outline'
+        ? colors.text
+        : colors.textMuted;
+
+    return (
+      <View
         style={{
-          color: icon === 'trophy-outline' ? colors.text : colors.textMuted,
-          marginLeft: 4,
-          fontSize: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 999,
+          backgroundColor: bg,
+          borderWidth: 1,
+          borderColor: border,
         }}
       >
-        {value}
-      </Text>
-    </View>
-  );
+        <Ionicons name={icon} size={14} color={text} />
+        <Text style={{ color: text, marginLeft: 4, fontSize: 12 }}>
+          {value}
+        </Text>
+      </View>
+    );
+  };
 
   const meSets = React.useMemo(() => {
     const friends = new Set((currentUser?.friends ?? []).map(String));
@@ -439,8 +453,8 @@ export default function FriendsTab({
             compact
             style={pillStyle}
             contentStyle={pillContent}
-            buttonColor={colors.primary}
-            textColor={colors.surface}
+            buttonColor={colors.surface}
+            textColor={colors.primary}
             onPress={() => onAdd(userId)}
           >
             Add
@@ -715,8 +729,3 @@ export default function FriendsTab({
     </SlideUpSheet>
   );
 }
-
-const btnStyles = StyleSheet.create({
-  base: { borderRadius: 999, height: 34 },
-  content: { height: 34, paddingHorizontal: 12 },
-});
