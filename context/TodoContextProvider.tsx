@@ -199,7 +199,6 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
     async (id: string, patch: { title?: string; description?: string }) => {
       const updated = await updateGoal(id, patch);
       const mapped = fromGoal(updated);
-      console.log(updated, '--and--', mapped);
 
       setTodos(prev => prev.map(t => (t.id === mapped.id ? mapped : t)));
       await maybeUnmarkTodayIfNeeded(mapped);
@@ -265,7 +264,6 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
       // pull streak info from backend
       try {
         const res = await authFetch('/api/user/me/streak');
-        console.log(res.ok);
 
         if (res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -312,8 +310,6 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
             'lastDailyCheckDate',
             'streakIncreasedForDate',
           ]).then(entries => entries.map(([, v]) => v));
-
-          console.log(localLast, 'and', serverLast);
 
           if (serverLast) {
             if (localLast !== serverLast) {
@@ -603,6 +599,31 @@ export const TodosProvider = ({ children }: { children: ReactNode }) => {
     };
     checkAndIncreaseStreak();
   }, [todos, streak, isLogin]);
+
+  // === Streak increased today && re-affirm incrementation ===
+  React.useEffect(() => {
+    if (!isLogin || !hydrated || todos.length === 0) return;
+
+    const today = toYyyyMmDd(new Date());
+
+    if (!streakIncreasedToday) return;
+
+    const liveToday = todos.filter(t => isLiveForDate(t));
+    const allCompleted =
+      liveToday.length > 0 && liveToday.every(t => t.completed);
+
+    const todayMarked = completionHistory?.[today] === true;
+
+    if (allCompleted && !todayMarked) {
+      setCompletionHistory(prev => {
+        const next = { ...(prev || {}), [today]: true };
+        AsyncStorage.setItem('completionHistory', JSON.stringify(next)).catch(
+          () => {}
+        );
+        return next;
+      });
+    }
+  }, [isLogin, hydrated, todos, completionHistory, streakIncreasedToday]);
 
   return (
     <TodosContext.Provider

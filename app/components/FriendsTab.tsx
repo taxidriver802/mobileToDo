@@ -8,6 +8,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Keyboard,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -16,12 +18,15 @@ import useTheme from '@/hooks/useTheme';
 import { useUser } from '@/context/UserContextProvider';
 import { fetchWithAutoBase, getToken } from '@/api/auth';
 import SlideUpSheet from './slideUpSheet';
+import { TextInput } from 'react-native-paper';
 
 type UserLite = {
   _id: string;
   username: string;
   fullName?: string;
   profilePic?: string;
+  streak?: number;
+  highestStreak?: number;
 };
 
 type UsersResponse = {
@@ -54,6 +59,12 @@ export default function FriendsTab({
   const [hasMore, setHasMore] = React.useState(true);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [sheetBusy, setSheetBusy] = React.useState(false);
+
+  const [sortBy, setSortBy] = React.useState<'current' | 'highest' | 'name'>(
+    'current'
+  );
+  const [nameAsc, setNameAsc] = React.useState(true);
+  const [query, setQuery] = React.useState('');
 
   const abortRef = React.useRef<AbortController | null>(null);
 
@@ -154,9 +165,10 @@ export default function FriendsTab({
         gap: 12,
       }}
       onPress={() => {
-        console.log('hello', item.profilePic);
+        console.log('hello', item.username);
       }}
     >
+      {/* avatar */}
       {item?.profilePic && item.profilePic !== 'default.jpg' ? (
         <Image
           source={{ uri: item.profilePic }}
@@ -185,6 +197,7 @@ export default function FriendsTab({
         />
       )}
 
+      {/* name + handle */}
       <View style={{ flex: 1 }}>
         <Text style={{ color: colors.text, fontWeight: '600' }}>
           {item.fullName || item.username}
@@ -195,7 +208,150 @@ export default function FriendsTab({
           </Text>
         )}
       </View>
+
+      {/* streak pills (right-aligned) */}
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+        {item.streak! > 0 && (
+          <StatPill icon="flame-outline" value={item.streak!} />
+        )}
+        {item.highestStreak! > 0 && (
+          <StatPill icon="trophy-outline" value={item.highestStreak!} />
+        )}
+      </View>
     </TouchableOpacity>
+  );
+
+  const ListHeader = () => (
+    <View
+      style={{
+        paddingHorizontal: 8,
+        paddingTop: 6,
+        gap: 10,
+      }}
+    >
+      {/* chips */}
+      <View
+        style={{
+          flexDirection: 'row',
+          gap: 5,
+          justifyContent: 'center',
+        }}
+      >
+        {[
+          {
+            key: 'current' as const,
+            label: 'Current',
+            icon: 'flame-outline' as const,
+            a11y: 'Sort by current streak',
+          },
+          {
+            key: 'highest' as const,
+            label: 'All-time',
+            icon: 'trophy-outline' as const,
+            a11y: 'Sort by highest all-time streak',
+          },
+          {
+            key: 'name' as const,
+            label: nameAsc ? 'A→Z' : 'Z→A',
+            icon: 'swap-vertical-outline' as const,
+            a11y: `Sort by name ${nameAsc ? 'A to Z' : 'Z to A'}`,
+          },
+        ].map(opt => {
+          const active = sortBy === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.key}
+              onPress={() => {
+                if (opt.key === 'name') {
+                  if (sortBy === 'name') setNameAsc(v => !v);
+                  setSortBy('name');
+                } else {
+                  setSortBy(opt.key);
+                }
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={opt.a11y}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 999,
+                backgroundColor: active ? colors.primary : colors.surface,
+                borderWidth: 1,
+                borderColor: active ? colors.primary : colors.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Ionicons
+                name={opt.icon}
+                size={14}
+                color={active ? colors.surface : colors.text}
+              />
+              <Text style={{ color: active ? colors.surface : colors.text }}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const visibleUsers = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const base = q
+      ? users.filter(u =>
+          [u.fullName, u.username].some(v => v?.toLowerCase().includes(q))
+        )
+      : users;
+
+    const sorted = [...base].sort((a, b) => {
+      if (sortBy === 'name') {
+        const cmp = (a.fullName || a.username).localeCompare(
+          b.fullName || b.username
+        );
+        return nameAsc ? cmp : -cmp;
+      }
+      if (sortBy === 'current') {
+        return (b.streak ?? -1) - (a.streak ?? -1); // desc
+      }
+      // 'highest'
+      return (b.highestStreak ?? -1) - (a.highestStreak ?? -1); // desc
+    });
+    return sorted;
+  }, [users, sortBy, nameAsc, query]);
+
+  const StatPill = ({
+    icon,
+    value,
+  }: {
+    icon: keyof typeof Ionicons.glyphMap;
+    value: number;
+  }) => (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 999,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+      }}
+    >
+      <Ionicons name={icon} size={14} color={colors.text} />
+      <Text
+        style={{
+          color: icon === 'trophy-outline' ? colors.text : colors.textMuted,
+          marginLeft: 4,
+          fontSize: 12,
+        }}
+      >
+        {value}
+      </Text>
+    </View>
   );
 
   return (
@@ -235,7 +391,7 @@ export default function FriendsTab({
             textAlign: 'center',
           }}
         >
-          Find Friends
+          Users Streaks
         </Text>
 
         {/* top-right toggle button (parity with Settings) */}
@@ -265,61 +421,102 @@ export default function FriendsTab({
             )}
           </Text>
         </TouchableOpacity>
+        <Pressable onPress={Keyboard.dismiss}>
+          {/* list */}
+          <SafeAreaView
+            style={{
+              height: '115%',
+              paddingTop: 15,
+              paddingBottom: 175,
+              /* backgroundColor: 'red', */
+            }}
+            edges={['left', 'right', 'bottom']}
+          >
+            {errorMsg ? (
+              <View style={{ padding: 16 }}>
+                <Text style={{ color: colors.danger }}>{errorMsg}</Text>
+                <TouchableOpacity
+                  disabled={sheetBusy}
+                  onPress={onRefresh}
+                  style={{
+                    marginTop: 8,
+                    alignSelf: 'flex-start',
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: colors.primary,
+                  }}
+                >
+                  <Text style={{ color: colors.primary }}>Try again</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
 
-        {/* list */}
-        <SafeAreaView
-          style={{ height: 'auto', paddingTop: 29 }}
-          edges={['left', 'right', 'bottom']}
-        >
-          {errorMsg ? (
-            <View style={{ padding: 16 }}>
-              <Text style={{ color: colors.danger }}>{errorMsg}</Text>
-              <TouchableOpacity
-                disabled={sheetBusy}
-                onPress={onRefresh}
+            {/* search */}
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                backgroundColor: colors.surface,
+                height: 40,
+              }}
+            >
+              <TextInput
+                placeholder="Search users"
+                placeholderTextColor={colors.textMuted}
+                onChangeText={setQuery}
+                value={query}
+                mode="flat"
+                underlineColor="transparent"
+                activeUnderlineColor="transparent"
+                submitBehavior="blurAndSubmit"
+                returnKeyType="done"
                 style={{
-                  marginTop: 8,
-                  alignSelf: 'flex-start',
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: colors.primary,
+                  color: colors.text,
+                  height: 24,
+                  backgroundColor: 'transparent',
                 }}
-              >
-                <Text style={{ color: colors.primary }}>Try again</Text>
-              </TouchableOpacity>
+              />
             </View>
-          ) : null}
 
-          <FlatList
-            data={users}
-            keyExtractor={u => u._id}
-            renderItem={renderItem}
-            refreshing={isRefreshing}
-            onRefresh={onRefresh}
-            onEndReachedThreshold={0.4}
-            onEndReached={loadMore}
-            showsVerticalScrollIndicator={false}
-            ListFooterComponent={
-              isLoading ? (
-                <View style={{ paddingVertical: 16 }}>
-                  <ActivityIndicator />
-                </View>
-              ) : null
-            }
-            ListEmptyComponent={
-              !isLoading && !isRefreshing ? (
-                <View style={{ padding: 16 }}>
-                  <Text style={{ color: colors.textMuted }}>
-                    No users found yet.
-                  </Text>
-                </View>
-              ) : null
-            }
-            /* style={{ marginTop: -45 }} */
-          />
-        </SafeAreaView>
+            <FlatList
+              data={visibleUsers}
+              keyExtractor={u => u._id}
+              renderItem={renderItem}
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              onEndReachedThreshold={0.4}
+              onEndReached={loadMore}
+              showsVerticalScrollIndicator={false}
+              ListHeaderComponent={<ListHeader />}
+              ListFooterComponent={
+                isLoading ? (
+                  <View style={{ paddingVertical: 16 }}>
+                    <ActivityIndicator />
+                  </View>
+                ) : null
+              }
+              ListEmptyComponent={
+                !isLoading && !isRefreshing ? (
+                  <View style={{ padding: 16 }}>
+                    <Text style={{ color: colors.textMuted }}>
+                      No users found yet.
+                    </Text>
+                  </View>
+                ) : null
+              }
+              keyboardDismissMode="on-drag"
+              keyboardShouldPersistTaps="handled"
+            />
+          </SafeAreaView>
+        </Pressable>
+        {/*  <View>
+          <Text style={{ color: colors.text }}>All Users: {users.length}</Text>
+        </View> */}
       </View>
     </SlideUpSheet>
   );
