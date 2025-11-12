@@ -27,7 +27,11 @@ export interface Todo {
   completed?: boolean;
   id: string;
   frequency: Freq;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+
 
 const isFilter = (v: unknown): v is Filter =>
   v === 'active' ||

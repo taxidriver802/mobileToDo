@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 
 import type { Todo } from '../(tabs)/index';
+import { Goal } from '@/api/goals';
 import { useTodos } from '../../context/TodoContextProvider';
 
 import { createGoal, updateGoalResetCompletion } from '@/api/goals';
 
-import { Freq } from '../(tabs)/index';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface TodoMakerProps {
@@ -26,6 +26,11 @@ interface TodoMakerProps {
   isOpen: boolean;
   handleClose?: () => void;
 }
+
+const createdAtFromObjectId = (id: string): string => {
+  const secs = parseInt(id.slice(0, 8), 16);
+  return new Date(secs * 1000).toISOString();
+};
 
 const Field = ({
   label,
@@ -96,18 +101,14 @@ const Field = ({
   );
 };
 
-const goalToTodo = (g: {
-  _id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  frequency: Freq;
-}) => ({
+const goalToTodo = (g: Goal) => ({
   id: g._id,
   title: g.title,
   description: g.description,
   completed: g.completed ?? false,
   frequency: g.frequency,
+  createdAt: g.createdAt ?? createdAtFromObjectId(g._id),
+  updatedAt: g.updatedAt ?? g.createdAt ?? createdAtFromObjectId(g._id),
 });
 
 const TodoMaker = ({

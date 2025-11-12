@@ -15,7 +15,7 @@ import useTheme from '@/hooks/useTheme';
 import { AuthProvider, useAuth } from '@/context/AuthContextProvider';
 import { UserProvider } from '@/context/UserContextProvider';
 
-import { createToastConfig } from './utils/createToastConfig';
+import { createToastConfig } from '../utils/createToastConfig';
 
 function Splash() {
   return (

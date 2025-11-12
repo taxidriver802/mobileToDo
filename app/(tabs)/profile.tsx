@@ -14,11 +14,12 @@ import { useUIStore } from '@/store/uiStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SlideUpSheet from '../components/slideUpSheet';
 import FireFlickerGradient from '@/hooks/FireFlickerGradient';
+import FriendsTab from '../components/FriendsTab';
 
 export default function Profile() {
   const { colors } = useTheme();
   const { isLoading } = useThemeContext();
-  const { streak } = useTodos();
+  const { streak, displayStreak } = useTodos();
 
   const { isLogin } = useAuth();
   const { user } = useUser();
@@ -75,6 +76,8 @@ export default function Profile() {
     },
     [isFriendsOpen, isSettingsOpen]
   );
+
+  const currentHighStreak = user?.highestStreak;
 
   return (
     <View
@@ -197,12 +200,18 @@ export default function Profile() {
                     right: 12,
                   }}
                 >
-                  {streak}
+                  {displayStreak}
                 </Text>
               </View>
             </View>
           )}
         </View>
+      </View>
+
+      <View>
+        <Text style={[styles.title, { color: colors.text }]}>
+          Longest Streak: {currentHighStreak}
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -253,6 +262,21 @@ export default function Profile() {
           handleNavButtons={handleNavButtons}
           isUpdaterOpen={isUpdaterOpen}
           setIsUpdaterOpen={setIsUpdaterOpen}
+        />
+      </SlideUpSheet>
+
+      {/* Friends Sheet test */}
+
+      <SlideUpSheet
+        open={!isSettingsOpen && isFriendsOpen}
+        onClose={() => setIsFriendsOpen(false)}
+        heightPct={0.9}
+        sheetStyle={{ backgroundColor: colors.surface }}
+      >
+        <FriendsTab
+          isFriendsOpen={isFriendsOpen}
+          setIsFriendsOpen={setIsFriendsOpen}
+          handleNavButtons={handleNavButtons}
         />
       </SlideUpSheet>
     </View>

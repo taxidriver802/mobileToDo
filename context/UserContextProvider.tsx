@@ -14,6 +14,8 @@ interface User {
   fullName: string;
   username: string;
   profilePic?: string;
+  streak: number;
+  highestStreak: number;
 }
 
 interface UserContextType {

@@ -1,6 +1,6 @@
 import useTheme from '@/hooks/useTheme';
 import React from 'react';
-import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTodos } from '../../context/TodoContextProvider';
 import type { Todo } from '../(tabs)/index';
 
@@ -25,6 +25,8 @@ export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
   };
 
   const areGoalsCompleted = todos.every(todo => todo.completed);
+
+  const fmt = (s?: string) => (s ? new Date(s).toLocaleDateString() : '—');
 
   return (
     <View
@@ -71,6 +73,22 @@ export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
             {todo.description}
           </Text>
         )}
+        <Text
+          style={[
+            styles.text,
+            { color: colors.textMuted, opacity: 0.25, marginTop: 8 },
+          ]}
+        >
+          Created on {fmt(todo.createdAt)}
+        </Text>
+        <Text
+          style={[
+            styles.text,
+            { color: colors.textMuted, opacity: 0.25, marginTop: 8 },
+          ]}
+        >
+          Updated on {fmt(todo.updatedAt ?? todo.createdAt)}
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -109,3 +127,14 @@ export default function TodoCard({ todo, onToggleComplete }: TodoCardProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  text: { fontSize: 16, fontWeight: '500' },
+  segment: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 1,
+    alignSelf: 'flex-start',
+  },
+});

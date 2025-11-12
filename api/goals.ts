@@ -60,14 +60,17 @@ export async function createGoal(input: {
 
 export async function updateGoal(
   id: string,
-  patch: Partial<Pick<Goal, 'title' | 'description' | 'completed'>>
+  patch: Partial<
+    Pick<Goal, 'title' | 'description' | 'completed' | 'frequency'>
+  >
 ): Promise<Goal> {
   const res = await authed(`/api/goals/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   });
-  return throwIfNotOk(res, 'Failed to update goal');
+  const data = await throwIfNotOk(res, 'Failed to update goal');
+  return data as Goal;
 }
 
 export async function updateGoalResetCompletion(

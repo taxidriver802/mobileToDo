@@ -5,7 +5,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import useTheme from '@/hooks/useTheme';
 import { ProgressBar } from 'react-native-paper';
 import { useTodos } from '@/context/TodoContextProvider';
-import { motivationalMessages } from '../utils/utils';
+import { motivationalMessages } from '../../utils/utils';
 import { useFocusEffect } from 'expo-router';
 import HomeComponentBite from './HomeComponentBite';
 import Ionicons from '@expo/vector-icons/Ionicons';

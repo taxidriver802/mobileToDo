@@ -13,7 +13,7 @@ import useTheme from '@/hooks/useTheme';
 import Loading from '../components/loading';
 import { useAuth } from '@/context/AuthContextProvider';
 import Toast from 'react-native-toast-message';
-import { showError, showSuccess } from '../utils/toast';
+import { showError, showSuccess } from '../../utils/toast';
 
 type Props = {
   onSwitchMode?: () => void;

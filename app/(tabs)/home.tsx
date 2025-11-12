@@ -62,7 +62,8 @@ export default function Home() {
       {todos.length === 0 && (
         <View>
           <Text style={[styles.content, { color: colors.text }]}>
-            You have no goals yet. Start by adding a new goal!
+            You have no goals yet.{'\n'}
+            Start by adding a new goal!
           </Text>
         </View>
       )}

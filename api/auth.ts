@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { Platform } from 'react-native';
 import { decode as base64decode } from 'base-64';
 import { router } from 'expo-router';
 
@@ -174,11 +173,7 @@ export async function register(
       signal: controller.signal,
     });
 
-    console.log('res', res);
-
     const data = await res.json();
-
-    console.log('data', data);
 
     if (!res.ok) {
       if (res.status === 409) {

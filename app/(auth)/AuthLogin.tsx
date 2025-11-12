@@ -12,7 +12,7 @@ import useTheme from '@/hooks/useTheme';
 import Loading from '../components/loading';
 import { useAuth } from '@/context/AuthContextProvider';
 import { loginAndHydrate } from '../../api/auth';
-import { showError, showSuccess } from '@/app/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 
 export default function AuthLogin() {
   const { colors } = useTheme();
