@@ -1,5 +1,7 @@
-import useTheme from '@/hooks/useTheme';
 import { useUser } from '@/context/UserContextProvider';
+import useTheme from '@/hooks/useTheme';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import * as ImagePicker from 'expo-image-picker';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -12,8 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import * as ImagePicker from 'expo-image-picker';
 
 type ProfileUpdaterProps = {
   handleNavButtons: (btn: 'updater') => void;
@@ -395,9 +395,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
   close: { width: 25, position: 'absolute', top: 5, right: 5, borderRadius: 7 },
-  logout: {
-    color: 'rgba(160, 3, 3, 0.9)',
-  },
 });
 
 export default ProfileUpdater;

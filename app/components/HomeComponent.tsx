@@ -56,7 +56,6 @@ export default function HomeComponent() {
     return { dailyGoals, weeklyGoals, monthlyGoals };
   }
 
-  // Group goals by frequency
   const { dailyGoals, weeklyGoals, monthlyGoals } =
     groupGoalsByFrequency(todos);
 

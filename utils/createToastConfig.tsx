@@ -1,4 +1,3 @@
-// utils/createToastConfig.tsx
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { BaseToast, ErrorToast, ToastConfig } from 'react-native-toast-message';

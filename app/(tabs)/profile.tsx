@@ -19,12 +19,18 @@ import FriendsTab from '../components/FriendsTab';
 export default function Profile() {
   const { colors } = useTheme();
   const { isLoading } = useThemeContext();
-  const { streak, displayStreak } = useTodos();
+  const { streak, displayStreak, todos } = useTodos();
 
   const { isLogin } = useAuth();
   const { user } = useUser();
 
   const [isUpdaterOpen, setIsUpdaterOpen] = React.useState(false);
+
+  const totalTodos = todos.length;
+  const completedTodos = todos.filter(t => t.completed).length;
+  const targetProgress = totalTodos > 0 ? completedTodos / totalTodos : 0;
+
+  const isAllCompleted = totalTodos > 0 && completedTodos === totalTodos;
 
   const {
     isSettingsOpen,
@@ -209,6 +215,16 @@ export default function Profile() {
       </View>
 
       <View>
+        {isAllCompleted && (
+          <Text style={[styles.title, { color: colors.text }]}>
+            {completedTodos} / {totalTodos} {'\n'}
+            {isAllCompleted ? 'All goals are completed' : 'Keep working!'}
+          </Text>
+        )}
+        <Text style={[styles.title, { color: colors.text }]}>
+          Total goals : {totalTodos}
+        </Text>
+
         <Text style={[styles.title, { color: colors.text }]}>
           Longest Streak: {currentHighStreak}
         </Text>

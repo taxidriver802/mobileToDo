@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
 import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
-import useTheme from '@/hooks/useTheme';
-import Loading from '../components/loading';
 import { useAuth } from '@/context/AuthContextProvider';
-import { loginAndHydrate } from '../../api/auth';
+import useTheme from '@/hooks/useTheme';
 import { showError, showSuccess } from '@/utils/toast';
+import { loginAndHydrate } from '../../api/auth';
+import Loading from '../components/loading';
 
-export default function AuthLogin() {
+type Props = {
+  onSwitchMode?: () => void;
+};
+
+export default function AuthLogin({ onSwitchMode }: Props) {
   const { colors } = useTheme();
   const { setIsLogin } = useAuth();
 

@@ -1,4 +1,3 @@
-// utils/toast.ts
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Toast, { ToastShowParams } from 'react-native-toast-message';
 
@@ -26,7 +25,6 @@ type CommonOpts = Partial<
   Pick<ToastShowParams, 'position' | 'autoHide' | 'visibilityTime' | 'onPress'>
 >;
 
-// --- Existing helpers ---
 export const showSuccess = (
   message: string,
   message2: string,

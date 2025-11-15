@@ -1,19 +1,17 @@
-// app/_layout.tsx
-import React, { useEffect, useMemo } from 'react';
 import {
   Href,
   Slot,
+  useRootNavigationState,
   useRouter,
   useSegments,
-  useRootNavigationState,
 } from 'expo-router';
+import React, { useEffect, useMemo } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { View, ActivityIndicator } from 'react-native';
 
-import { ThemeProvider } from '@/hooks/useTheme';
-import useTheme from '@/hooks/useTheme';
 import { AuthProvider, useAuth } from '@/context/AuthContextProvider';
 import { UserProvider } from '@/context/UserContextProvider';
+import useTheme, { ThemeProvider } from '@/hooks/useTheme';
 
 import { createToastConfig } from '../utils/createToastConfig';
 
@@ -45,7 +43,6 @@ function AuthGate() {
   return <Slot />;
 }
 
-/** Child under ThemeProvider so it can read theme safely */
 function ThemedToastMount() {
   const { colors } = useTheme();
   const toastConfig = useMemo(() => createToastConfig(colors), [colors]);
